@@ -19,7 +19,9 @@ class RefundMapper extends BaseMapper
     {
         // Les avoirs ont une structure simplifiée
         // On retourne directement les items car c'est ce qui est envoyé à l'API
+        // Mais on préserve invoiceId pour l'URL
         return [
+            'invoiceId' => $data['invoiceId'] ?? '', // Préserver invoiceId pour l'URL
             'items' => $this->mapItems($data['items'] ?? []),
         ];
     }

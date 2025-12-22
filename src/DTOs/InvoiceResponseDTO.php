@@ -45,6 +45,11 @@ class InvoiceResponseDTO
     public int $vatAmount;
 
     /**
+     * Client NCC (optionnel)
+     */
+    public ?string $clientNcc = null;
+
+    /**
      * Create a new InvoiceResponseDTO instance.
      */
     public function __construct(
@@ -54,7 +59,8 @@ class InvoiceResponseDTO
         string $type,
         string $date,
         int $amount,
-        int $vatAmount
+        int $vatAmount,
+        ?string $clientNcc = null
     ) {
         $this->id = $id;
         $this->reference = $reference;
@@ -63,6 +69,7 @@ class InvoiceResponseDTO
         $this->date = $date;
         $this->amount = $amount;
         $this->vatAmount = $vatAmount;
+        $this->clientNcc = $clientNcc;
     }
 
     /**
@@ -80,7 +87,8 @@ class InvoiceResponseDTO
             $data['type'] ?? '',
             $data['date'] ?? '',
             $data['amount'] ?? 0,
-            $data['vatAmount'] ?? 0
+            $data['vatAmount'] ?? 0,
+            $data['clientNcc'] ?? null
         );
     }
 
@@ -119,6 +127,7 @@ class InvoiceResponseDTO
             'date' => $this->date,
             'amount' => $this->amount,
             'vatAmount' => $this->vatAmount,
+            'clientNcc' => $this->clientNcc,
         ];
     }
 }

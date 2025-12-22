@@ -72,8 +72,13 @@ class RefundService extends BaseService
      */
     protected function makeRequest(array $data): mixed
     {
-        $invoiceId = $data['invoiceId'];
-        $url = rtrim($this->config->getBaseUrl(), '/') . "/api/external/invoices/{$invoiceId}/refund";
+        $invoiceId = $data['invoiceId'] ?? '';
+        // S'assurer que l'invoiceId n'est pas vide
+        if (empty($invoiceId)) {
+            throw new \InvalidArgumentException('Invoice ID is required for refund.');
+        }
+        $baseUrl = rtrim($this->config->getBaseUrl(), '/');
+        $url = "{$baseUrl}/api/external/invoices/{$invoiceId}/refund";
 
         $options = [
             'headers' => [

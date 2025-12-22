@@ -20,6 +20,26 @@ use Neocode\FNE\Validation\ValidatorFactory;
 class PurchaseService extends BaseService
 {
     /**
+     * Valider les données avant le mapping pour vérifier qu'il n'y a pas de taxes.
+     *
+     * @param  array<string, mixed>  $data
+     * @return void
+     */
+    protected function validatePreMapping(array $data): void
+    {
+        // Vérifier qu'il n'y a pas de taxes dans les items (bordereaux d'achat)
+        if (isset($data['items']) && is_array($data['items'])) {
+            foreach ($data['items'] as $index => $item) {
+                if (isset($item['taxes']) && !empty($item['taxes'])) {
+                    throw new \Neocode\FNE\Exceptions\ValidationException(
+                        'Taxes are not allowed for purchase invoices.',
+                        ["items.{$index}.taxes" => ['Taxes are not allowed for purchase invoices.']]
+                    );
+                }
+            }
+        }
+    }
+    /**
      * Create a new PurchaseService instance.
      */
     public function __construct(

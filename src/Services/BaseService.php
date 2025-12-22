@@ -80,26 +80,31 @@ abstract class BaseService
      */
     public function execute(array $data): mixed
     {
-        // 1. Mapping des données (ERP → FNE)
+        // 1. Validation pré-mapping (sur les données d'entrée)
+        // Note: Certaines validations doivent se faire sur les données d'entrée
+        // (ex: vérifier qu'il n'y a pas de taxes dans les achats)
+        $this->validatePreMapping($data);
+
+        // 2. Mapping des données (ERP → FNE)
         $mappedData = $this->map($data);
 
-        // 2. Validation
+        // 3. Validation post-mapping (sur les données mappées)
         $this->validate($mappedData);
 
-        // 3. Vérifier le cache
+        // 4. Vérifier le cache
         $cacheKey = $this->getCacheKey($mappedData);
         if ($this->shouldUseCache() && $this->cache && $this->cache->has($cacheKey)) {
             $this->log('debug', 'Cache hit', ['key' => $cacheKey]);
             return $this->cache->get($cacheKey);
         }
 
-        // 4. Exécuter la requête HTTP
+        // 5. Exécuter la requête HTTP
         $response = $this->makeRequest($mappedData);
 
-        // 5. Traiter la réponse
+        // 6. Traiter la réponse
         $result = $this->processResponse($response);
 
-        // 6. Mettre en cache si nécessaire
+        // 7. Mettre en cache si nécessaire
         if ($this->shouldUseCache() && $this->cache && $result !== null) {
             $ttl = $this->getCacheTtl();
             $this->cache->set($cacheKey, $result, $ttl);
@@ -141,7 +146,19 @@ abstract class BaseService
     }
 
     /**
-     * Valider les données.
+     * Valider les données avant le mapping (sur les données d'entrée).
+     *
+     * @param  array<string, mixed>  $data
+     * @return void
+     */
+    protected function validatePreMapping(array $data): void
+    {
+        // Par défaut, pas de validation pré-mapping
+        // Les sous-classes peuvent surcharger cette méthode
+    }
+
+    /**
+     * Valider les données après le mapping (sur les données mappées).
      *
      * @param  array<string, mixed>  $data
      * @return void
