@@ -3,10 +3,6 @@
 namespace Neocode\FNE\Http;
 
 use Neocode\FNE\Contracts\HttpClientInterface;
-use Neocode\FNE\Exceptions\AuthenticationException;
-use Neocode\FNE\Exceptions\BadRequestException;
-use Neocode\FNE\Exceptions\NotFoundException;
-use Neocode\FNE\Exceptions\ServerException;
 use Neocode\FNE\Http\ResponseHandler;
 
 /**
