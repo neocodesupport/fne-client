@@ -105,6 +105,14 @@ class FNEConfig
     }
 
     /**
+     * Vérifier si on est en mode production.
+     */
+    public function isProduction(): bool
+    {
+        return $this->mode === 'production';
+    }
+
+    /**
      * Obtenir le timeout.
      */
     public function getTimeout(): int

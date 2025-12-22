@@ -2,6 +2,7 @@
 
 namespace Neocode\FNE\Http;
 
+use Neocode\FNE\Config\FNEConfig;
 use Neocode\FNE\Contracts\HttpClientInterface;
 use Neocode\FNE\Http\ResponseHandler;
 use Psr\Http\Message\ResponseInterface;
@@ -19,15 +20,27 @@ class GuzzleHttpClient implements HttpClientInterface
     protected \GuzzleHttp\Client $client;
 
     /**
+     * Configuration
+     */
+    protected FNEConfig $config;
+
+    /**
      * Create a new GuzzleHttpClient instance.
      */
-    public function __construct()
+    public function __construct(FNEConfig $config)
     {
         if (!class_exists(\GuzzleHttp\Client::class)) {
             throw new \RuntimeException('Guzzle HTTP Client is not available.');
         }
 
-        $this->client = new \GuzzleHttp\Client();
+        $this->config = $config;
+
+        $this->client = new \GuzzleHttp\Client([
+            'base_uri' => $config->getBaseUrl(),
+            'timeout' => $config->getTimeout(),
+            'http_errors' => false, // On gère les erreurs manuellement
+            'verify' => $config->isTestMode() ? false : true, // Désactiver SSL verification en mode test
+        ]);
     }
 
     /**
@@ -41,8 +54,12 @@ class GuzzleHttpClient implements HttpClientInterface
     public function request(string $method, string $uri, array $options = []): mixed
     {
         $guzzleOptions = [
-            'headers' => $options['headers'] ?? [],
-            'timeout' => $options['timeout'] ?? 30,
+            'headers' => $options['headers'] ?? [
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+                'Authorization' => 'Bearer ' . $this->config->getApiKey(),
+            ],
+            'timeout' => $options['timeout'] ?? $this->config->getTimeout(),
         ];
 
         // Ajouter le body si présent
@@ -50,7 +67,7 @@ class GuzzleHttpClient implements HttpClientInterface
             if (is_string($options['body'])) {
                 $guzzleOptions['body'] = $options['body'];
             } else {
-                $guzzleOptions['json'] = $options['body'];
+                $guzzleOptions['json'] = json_decode($options['body'], true) ?? $options['body'];
             }
         }
 

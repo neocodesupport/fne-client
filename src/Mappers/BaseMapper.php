@@ -194,13 +194,13 @@ abstract class BaseMapper implements MapperInterface
     protected function normalizeNumbers(array $data): array
     {
         foreach ($data as $key => $value) {
-            if (is_numeric($value) && !is_string($value)) {
+            if (is_array($value)) {
+                $data[$key] = $this->normalizeNumbers($value);
+            } elseif (is_numeric($value) && !is_string($value)) {
                 $data[$key] = $value;
             } elseif (is_string($value) && is_numeric($value)) {
                 // Convertir les strings numériques en float/int
                 $data[$key] = str_contains($value, '.') ? (float) $value : (int) $value;
-            } elseif (is_array($value)) {
-                $data[$key] = $this->normalizeNumbers($value);
             }
         }
 

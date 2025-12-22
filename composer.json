@@ -28,9 +28,10 @@
         "laravel/pennant": "^1.0"
     },
     "require-dev": {
+        "guzzlehttp/guzzle": "^7.10",
+        "laravel/pint": "^1.24",
         "pestphp/pest": "^2.0",
-        "phpstan/phpstan": "^1.10",
-        "laravel/pint": "^1.24"
+        "phpstan/phpstan": "^1.10"
     },
     "suggest": {
         "illuminate/support": "^11.0 Required for Laravel integration",
@@ -80,4 +81,3 @@
     "minimum-stability": "dev",
     "prefer-stable": true
 }
-

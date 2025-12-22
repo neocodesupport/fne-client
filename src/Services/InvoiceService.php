@@ -67,7 +67,7 @@ class InvoiceService extends BaseService
      */
     protected function makeRequest(array $data): mixed
     {
-        $url = rtrim($this->config->getBaseUrl(), '/') . '/external/invoices/sign';
+        $url = rtrim($this->config->getBaseUrl(), '/') . '/api/external/invoices/sign';
 
         $options = [
             'headers' => [

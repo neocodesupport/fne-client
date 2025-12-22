@@ -73,7 +73,7 @@ class RefundService extends BaseService
     protected function makeRequest(array $data): mixed
     {
         $invoiceId = $data['invoiceId'];
-        $url = rtrim($this->config->getBaseUrl(), '/') . "/external/invoices/{$invoiceId}/refund";
+        $url = rtrim($this->config->getBaseUrl(), '/') . "/api/external/invoices/{$invoiceId}/refund";
 
         $options = [
             'headers' => [

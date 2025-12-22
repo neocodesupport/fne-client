@@ -61,13 +61,14 @@ class ResponseHandler
         }
 
         // Erreurs
-        $body = json_decode($response->getBody()->getContents(), true);
+        $bodyContent = $response->getBody()->getContents();
+        $body = json_decode($bodyContent, true) ?? [];
         $message = $body['message'] ?? self::getDefaultMessage($statusCode);
         $errors = $body['errors'] ?? [];
 
         match ($statusCode) {
-            400 => throw new BadRequestException($message, $errors),
-            401 => throw new AuthenticationException($message),
+            400, 422 => throw new BadRequestException($message, $errors),
+            401, 403 => throw new AuthenticationException($message),
             404 => throw new NotFoundException($message),
             default => throw new ServerException($message),
         };
