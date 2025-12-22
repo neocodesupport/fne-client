@@ -8,6 +8,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Améliorations futures et corrections de bugs
+
+## [1.0.0-beta] - 2025-01-XX
+
+### Added
+- **Mapping personnalisé** : Configuration flexible ERP → FNE avec notation pointée
+  - Support de la notation pointée pour chemins imbriqués (ex: `'client.name'`)
+  - Configuration via `config/fne.php` avec sections `invoice`, `purchase`, `refund`
+  - Application automatique du mapping avant le mapping standard
+- **Traits pour intégration modèles** :
+  - `CertifiableInvoice` : Trait pour factures de vente avec méthode `certify()`
+  - `CertifiablePurchase` : Trait pour bordereaux d'achat avec méthode `submit()`
+  - `CertifiableRefund` : Trait pour avoirs avec méthode `issueRefund()`
+  - `Certifiable` : Trait combiné pour tous types de documents
+  - Support multi-framework (Laravel Eloquent, Symfony Doctrine, PHP natif)
+  - Détection automatique du framework et extraction des données
+- **Intégration modèles dans BaseService** :
+  - Méthodes `setModel()` et `setData()` pour contexte flexible
+  - Méthode `getData()` avec ordre de priorité (explicite > contexte > modèle)
+  - Méthode `extractModelData()` supportant différentes méthodes d'extraction
+- **Protection contre conversions de tableaux** :
+  - Correction des avertissements "Array to string conversion" dans les mappers
+  - Vérification des types avant conversion dans `normalizeBooleans()`
+  - Protection dans toutes les méthodes de normalisation
+
+### Changed
+- **BaseService** : Support de `?array $data = null` dans `execute()` et `sign()/submit()`
+- **Services** : Les méthodes `sign()` et `submit()` acceptent maintenant `null` et utilisent le contexte
+- **Mappers** : Application automatique du mapping personnalisé si configuré
+- **Tests** : Suite de tests étendue à 67 tests (222 assertions)
+
+### Fixed
+- Correction des avertissements "Array to string conversion" dans tous les mappers
+- Amélioration de la vérification SSL dans les tests API
+- Correction de la gestion des tableaux dans les méthodes de normalisation
+
+### Security
+- Validation stricte des types avant conversion pour éviter les conversions non sécurisées
+
+## [1.0.0-alpha] - 2025-01-XX
+
+### Added
 - Architecture SOLID complète avec séparation des responsabilités
 - Support framework-agnostic (Laravel 11+, Symfony 7.4+, PHP natif)
 - Détection automatique du framework lors de l'installation
@@ -47,6 +89,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - DTOs typés pour réponses API :
   - `ResponseDTO` pour réponses complètes
   - `InvoiceResponseDTO` pour informations facture
+  - `InvoiceItemResponseDTO` pour articles
+  - `TaxResponseDTO` pour taxes
+  - `CustomTaxResponseDTO` pour taxes personnalisées
 - Hiérarchie d'exceptions complète :
   - `FNEException` (classe de base)
   - `ValidationException` (422)
@@ -57,9 +102,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `ServerException` (500+)
 - Configuration centralisée avec `FNEConfig`
 - Support du logging PSR-3
-- Tests unitaires complets (29 tests, 142 assertions)
+- Tests unitaires complets
 - Tests d'intégration avec API mock locale
-- Documentation complète (README.md)
+- Documentation complète (README.md, ConceptionDirective.md)
 - Commandes d'installation :
   - `php artisan fne:install` (Laravel)
   - `php bin/console fne:install` (Symfony)
@@ -77,13 +122,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Correction du mapping de `clientNcc` pour assurer le type string
 - Correction de la gestion des réponses HTTP avec décodage JSON sécurisé
 - Correction de la détection de framework pour meilleure compatibilité
+- Correction des endpoints API (suppression du préfixe `/api` incorrect)
 
 ### Security
 - Validation stricte de toutes les entrées utilisateur
 - Protection de l'API key dans les logs
 - Désactivation SSL verification uniquement en mode test
-
-## [1.0.0-alpha] - 2025-01-XX
 
 ### Added
 - Version alpha initiale

@@ -2,7 +2,7 @@
 
 [![PHP Version](https://img.shields.io/badge/php-8.2%2B-blue.svg)](https://php.net)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-66%20passed-success.svg)](tests)
+[![Tests](https://img.shields.io/badge/tests-67%20passed-success.svg)](tests)
 
 SDK PHP framework-agnostic pour l'intégration de l'API FNE (Facture Normalisée Électronique). Compatible avec Laravel 11+, Symfony 7.4+ et PHP natif.
 
@@ -708,7 +708,7 @@ $result = $service->sign($erpData);
 
 ## 🧪 Tests
 
-Le package inclut une suite de tests complète avec **66 tests** couvrant :
+Le package inclut une suite de tests complète avec **67 tests** (222 assertions) couvrant :
 
 - ✅ Tests unitaires (Cache, DTOs, Enums, Mappers, Validators)
 - ✅ Tests d'intégration (Services avec API mock)

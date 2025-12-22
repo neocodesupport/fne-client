@@ -1,6 +1,6 @@
 {
     "name": "neocode/fne-client",
-    "description": "SDK PHP framework-agnostic pour l'intégration de l'API FNE (Facture Normalisée Électronique)",
+    "description": "SDK PHP framework-agnostic pour l'intégration de l'API FNE (Facture Normalisée Électronique) - Version 1.0.0-beta",
     "type": "library",
     "keywords": [
         "fne",
