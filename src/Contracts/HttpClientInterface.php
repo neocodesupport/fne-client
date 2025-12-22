@@ -2,9 +2,6 @@
 
 namespace Neocode\FNE\Contracts;
 
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
-
 /**
  * Interface pour le client HTTP
  */
@@ -16,8 +13,8 @@ interface HttpClientInterface
      * @param  string  $method  Méthode HTTP (GET, POST, etc.)
      * @param  string  $uri  URI de la requête
      * @param  array<string, mixed>  $options  Options de la requête (headers, body, etc.)
-     * @return ResponseInterface
+     * @return mixed  Réponse HTTP (peut être Laravel Response, PSR-7 ResponseInterface, ou autre)
      */
-    public function request(string $method, string $uri, array $options = []): ResponseInterface;
+    public function request(string $method, string $uri, array $options = []): mixed;
 }
 
