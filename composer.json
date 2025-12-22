@@ -55,10 +55,10 @@
         "analyse": "phpstan analyse",
         "format": "pint",
         "post-install-cmd": [
-            "@php -r \"file_exists('vendor/bin/fne-install') || echo 'Run: php vendor/bin/fne-install' . PHP_EOL;\""
+            "@php -r \"if (file_exists('vendor/autoload.php')) { require 'vendor/autoload.php'; \\Neocode\\FNE\\Install\\FrameworkDetector::detectAndDisplay(); }\""
         ],
         "post-update-cmd": [
-            "@php -r \"file_exists('vendor/bin/fne-install') || echo 'Run: php vendor/bin/fne-install' . PHP_EOL;\""
+            "@php -r \"if (file_exists('vendor/autoload.php')) { require 'vendor/autoload.php'; \\Neocode\\FNE\\Install\\FrameworkDetector::detectAndDisplay(); }\""
         ]
     },
     "extra": {
