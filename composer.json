@@ -24,7 +24,8 @@
         "psr/http-message": "^1.0",
         "psr/log": "^3.0",
         "psr/simple-cache": "^3.0",
-        "laravel/prompts": "^0.1.0"
+        "laravel/prompts": "^0.1.0",
+        "laravel/pennant": "^1.0"
     },
     "require-dev": {
         "pestphp/pest": "^2.0",
@@ -34,7 +35,6 @@
     "suggest": {
         "illuminate/support": "^11.0 Required for Laravel integration",
         "illuminate/http": "^11.0 Required for Laravel HTTP Client",
-        "laravel/pennant": "^1.0 Required for feature flags in Laravel",
         "guzzlehttp/guzzle": "^7.0 Required for HTTP client if Laravel HTTP is not available",
         "symfony/cache": "^7.4 Optional for Symfony cache integration",
         "symfony/http-client": "^7.4 Optional for Symfony HTTP client"

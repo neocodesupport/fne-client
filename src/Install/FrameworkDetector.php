@@ -2,6 +2,10 @@
 
 namespace Neocode\FNE\Install;
 
+use Illuminate\Foundation\Application;
+use Illuminate\Support\Facades\Facade;
+use Symfony\Component\HttpKernel\Kernel;
+
 /**
  * Détecteur de framework
  */
@@ -31,9 +35,9 @@ class FrameworkDetector
      */
     public function isLaravel(): bool
     {
-        return class_exists(\Illuminate\Foundation\Application::class)
-            || class_exists(\Illuminate\Support\Facades\Facade::class)
-            || file_exists(getcwd() . '/artisan');
+        return (class_exists(Application::class)
+            || class_exists(Facade::class))
+            && file_exists(getcwd() . '/artisan');
     }
 
     /**
@@ -41,8 +45,8 @@ class FrameworkDetector
      */
     public function isSymfony(): bool
     {
-        return class_exists(\Symfony\Component\HttpKernel\Kernel::class)
-            || file_exists(getcwd() . '/bin/console');
+        return class_exists(Kernel::class)
+            && file_exists(getcwd() . '/bin/console');
     }
 
     /**
@@ -54,8 +58,8 @@ class FrameworkDetector
             return null;
         }
 
-        if (class_exists(\Illuminate\Foundation\Application::class)) {
-            return \Illuminate\Foundation\Application::VERSION ?? null;
+        if (class_exists(Application::class)) {
+            return Application::VERSION ?? null;
         }
 
         return null;
@@ -70,8 +74,8 @@ class FrameworkDetector
             return null;
         }
 
-        if (class_exists(\Symfony\Component\HttpKernel\Kernel::class)) {
-            return \Symfony\Component\HttpKernel\Kernel::VERSION ?? null;
+        if (class_exists(Kernel::class)) {
+            return Kernel::VERSION ?? null;
         }
 
         return null;
