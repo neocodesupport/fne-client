@@ -8,7 +8,7 @@ use Neocode\FNE\Services\RefundService;
 beforeEach(function () {
     $this->config = new FNEConfig([
         'api_key' => 'test-key-123',
-        'base_url' => 'https://fne-api-mock.test',
+        'base_url' => 'https://fne-api-mock.test/api',
         'mode' => 'test',
         'cache' => [
             'enabled' => false,
@@ -74,7 +74,7 @@ test('RefundService throws ValidationException for invalid UUID', function () {
         'ssl' => ['verify_peer' => false, 'verify_peer_name' => false],
     ]);
     
-    if (!@file_get_contents('https://fne-api-mock.test', false, $context)) {
+    if (!@file_get_contents('https://fne-api-mock.test/api', false, $context)) {
         $this->markTestSkipped('API mock not available');
         return;
     }
@@ -98,7 +98,7 @@ test('RefundService throws ValidationException for invalid quantity', function (
         'ssl' => ['verify_peer' => false, 'verify_peer_name' => false],
     ]);
     
-    if (!@file_get_contents('https://fne-api-mock.test', false, $context)) {
+    if (!@file_get_contents('https://fne-api-mock.test/api', false, $context)) {
         $this->markTestSkipped('API mock not available');
         return;
     }

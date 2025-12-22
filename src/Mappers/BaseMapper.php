@@ -181,14 +181,14 @@ abstract class BaseMapper implements MapperInterface
     protected function normalizeBooleans(array $data): array
     {
         foreach ($data as $key => $value) {
-            if (is_bool($value)) {
-                $data[$key] = $value;
-            } elseif (in_array(strtolower((string) $value), ['true', '1', 'yes', 'on'], true)) {
-                $data[$key] = true;
-            } elseif (in_array(strtolower((string) $value), ['false', '0', 'no', 'off', ''], true)) {
-                $data[$key] = false;
-            } elseif (is_array($value)) {
+            if (is_array($value)) {
                 $data[$key] = $this->normalizeBooleans($value);
+            } elseif (is_bool($value)) {
+                $data[$key] = $value;
+            } elseif (is_scalar($value) && in_array(strtolower((string) $value), ['true', '1', 'yes', 'on'], true)) {
+                $data[$key] = true;
+            } elseif (is_scalar($value) && in_array(strtolower((string) $value), ['false', '0', 'no', 'off', ''], true)) {
+                $data[$key] = false;
             }
         }
 

@@ -13,7 +13,7 @@ beforeEach(function () {
     // Configuration pour utiliser l'API mock locale
     $this->config = new FNEConfig([
         'api_key' => 'test-key-123',
-        'base_url' => 'https://fne-api-mock.test',
+        'base_url' => 'https://fne-api-mock.test/api',
         'mode' => 'test',
         'cache' => [
             'enabled' => false,
@@ -34,23 +34,6 @@ beforeEach(function () {
 });
 
 test('InvoiceService can sign a B2C sale invoice', function () {
-    // Skip si l'API mock n'est pas disponible
-    $context = stream_context_create([
-        'http' => [
-            'method' => 'GET',
-            'timeout' => 2,
-            'ignore_errors' => true,
-        ],
-        'ssl' => [
-            'verify_peer' => false,
-            'verify_peer_name' => false,
-        ],
-    ]);
-    
-    if (!@file_get_contents('https://fne-api-mock.test/api/external/invoices/sign', false, $context)) {
-        $this->markTestSkipped('API mock not available');
-    }
-
     $data = [
         'invoiceType' => InvoiceType::SALE->value,
         'paymentMethod' => PaymentMethod::CASH->value,
@@ -80,9 +63,13 @@ test('InvoiceService can sign a B2C sale invoice', function () {
         ->and($result->token)->not->toBeEmpty()
         ->and($result->invoice)->not->toBeNull()
         ->and($result->invoice->id)->not->toBeEmpty();
-})->skip(fn() => !@file_get_contents('https://fne-api-mock.test', false, stream_context_create([
-    'http' => ['timeout' => 2, 'ignore_errors' => true],
-])));
+})->skip(function () {
+    $context = stream_context_create([
+        'http' => ['timeout' => 2, 'ignore_errors' => true],
+        'ssl' => ['verify_peer' => false, 'verify_peer_name' => false],
+    ]);
+    return !@file_get_contents('https://fne-api-mock.test', false, $context);
+});
 
 test('InvoiceService can sign a B2B sale invoice with clientNcc', function () {
     // Skip si l'API mock n'est pas disponible
@@ -91,7 +78,7 @@ test('InvoiceService can sign a B2B sale invoice with clientNcc', function () {
         'ssl' => ['verify_peer' => false, 'verify_peer_name' => false],
     ]);
     
-    if (!@file_get_contents('https://fne-api-mock.test', false, $context)) {
+    if (!@file_get_contents('https://fne-api-mock.test/api', false, $context)) {
         $this->markTestSkipped('API mock not available');
     }
     $data = [
@@ -171,7 +158,7 @@ test('InvoiceService throws ValidationException for B2B without clientNcc', func
 test('InvoiceService throws AuthenticationException for invalid API key', function () {
     $invalidConfig = new FNEConfig([
         'api_key' => 'invalid-key',
-        'base_url' => 'https://fne-api-mock.test',
+        'base_url' => 'https://fne-api-mock.test/api',
         'mode' => 'test',
     ]);
 

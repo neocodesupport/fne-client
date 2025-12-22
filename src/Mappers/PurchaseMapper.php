@@ -110,6 +110,10 @@ class PurchaseMapper extends BaseMapper
      */
     protected function mapPaymentMethod(mixed $paymentMethod): string
     {
+        if (is_array($paymentMethod)) {
+            return PaymentMethod::CASH->value;
+        }
+
         if (is_object($paymentMethod) && enum_exists(get_class($paymentMethod))) {
             return $paymentMethod->value;
         }
@@ -135,6 +139,10 @@ class PurchaseMapper extends BaseMapper
      */
     protected function mapTemplate(mixed $template): string
     {
+        if (is_array($template)) {
+            return InvoiceTemplate::B2C->value;
+        }
+
         if (is_object($template) && enum_exists(get_class($template))) {
             return $template->value;
         }
@@ -158,6 +166,10 @@ class PurchaseMapper extends BaseMapper
      */
     protected function normalizePhone(mixed $phone): string
     {
+        if (is_array($phone)) {
+            return '';
+        }
+
         if (is_numeric($phone)) {
             return (string) $phone;
         }

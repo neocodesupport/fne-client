@@ -57,6 +57,10 @@ class RefundMapper extends BaseMapper
      */
     protected function normalizeUuid(mixed $uuid): string
     {
+        if (is_array($uuid)) {
+            return '';
+        }
+
         $uuid = (string) $uuid;
 
         // Supprimer les espaces
