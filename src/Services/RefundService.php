@@ -78,7 +78,7 @@ class RefundService extends BaseService
             throw new \InvalidArgumentException('Invoice ID is required for refund.');
         }
         $baseUrl = rtrim($this->config->getBaseUrl(), '/');
-        $url = "{$baseUrl}/api/external/invoices/{$invoiceId}/refund";
+        $url = "{$baseUrl}/external/invoices/{$invoiceId}/refund";
 
         $options = [
             'headers' => [
