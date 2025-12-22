@@ -8,5 +8,96 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Initial project structure
+- Architecture SOLID complète avec séparation des responsabilités
+- Support framework-agnostic (Laravel 11+, Symfony 7.4+, PHP natif)
+- Détection automatique du framework lors de l'installation
+- Installation interactive avec Laravel Prompts
+- Service Provider Laravel avec intégration complète
+- Facade Laravel pour accès simplifié
+- Trait `InteractsWithFNE` pour utilisation dans les classes Laravel
+- Gestion modulaire avec Laravel Pennant (Laravel uniquement)
+- Enums PHP 8.2+ pour sécurité de type :
+  - `InvoiceTemplate` (B2C, B2B, B2F, B2G)
+  - `PaymentMethod` (CASH, CARD, CHECK, MOBILE_MONEY, TRANSFER, DEFERRED)
+  - `InvoiceType` (SALE, PURCHASE)
+  - `TaxType` (TVA, TVAB, TVAC, TVAD)
+  - `ForeignCurrency` (XOF, USD, EUR, JPY, CAD, GBP, AUD, CNH, CHF, HKD, NZD)
+- Services complets :
+  - `InvoiceService` pour factures de vente
+  - `PurchaseService` pour bordereaux d'achat
+  - `RefundService` pour avoirs
+- Mappers pour transformation ERP → FNE :
+  - `InvoiceMapper` avec normalisation des données
+  - `PurchaseMapper` pour bordereaux d'achat
+  - `RefundMapper` pour avoirs
+  - `BaseMapper` avec méthodes utilitaires communes
+- Validators avec validation stricte :
+  - `InvoiceValidator` avec règles conditionnelles
+  - `PurchaseValidator` avec validation des taxes absentes
+  - `RefundValidator` avec validation UUID
+  - `BaseValidator` avec système de règles extensible
+- HTTP Clients avec sélection automatique :
+  - `LaravelHttpClient` (priorité si `illuminate/http` disponible)
+  - `GuzzleHttpClient` (fallback)
+  - `HttpClientFactory` pour sélection automatique
+- Cache PSR-16 compatible :
+  - `LaravelCache` pour intégration Laravel
+  - `ArrayCache` pour PHP natif
+  - `CacheFactory` pour sélection automatique
+- DTOs typés pour réponses API :
+  - `ResponseDTO` pour réponses complètes
+  - `InvoiceResponseDTO` pour informations facture
+- Hiérarchie d'exceptions complète :
+  - `FNEException` (classe de base)
+  - `ValidationException` (422)
+  - `MappingException` (500)
+  - `AuthenticationException` (401)
+  - `BadRequestException` (400)
+  - `NotFoundException` (404)
+  - `ServerException` (500+)
+- Configuration centralisée avec `FNEConfig`
+- Support du logging PSR-3
+- Tests unitaires complets (29 tests, 142 assertions)
+- Tests d'intégration avec API mock locale
+- Documentation complète (README.md)
+- Commandes d'installation :
+  - `php artisan fne:install` (Laravel)
+  - `php bin/console fne:install` (Symfony)
+  - `php vendor/bin/fne-install` (PHP natif)
 
+### Changed
+- Architecture modulaire avec séparation claire des couches
+- Validation pré-mapping pour certaines règles (ex: taxes dans achats)
+- Gestion améliorée des erreurs avec messages détaillés
+
+### Fixed
+- Correction de la gestion du cache dans le Service Provider Laravel
+- Correction de la construction d'URL pour les avoirs (double slash)
+- Correction de la validation des taxes dans les bordereaux d'achat
+- Correction du mapping de `clientNcc` pour assurer le type string
+- Correction de la gestion des réponses HTTP avec décodage JSON sécurisé
+- Correction de la détection de framework pour meilleure compatibilité
+
+### Security
+- Validation stricte de toutes les entrées utilisateur
+- Protection de l'API key dans les logs
+- Désactivation SSL verification uniquement en mode test
+
+## [1.0.0-alpha] - 2025-01-XX
+
+### Added
+- Version alpha initiale
+- Architecture de base complète
+- Support des trois frameworks (Laravel, Symfony, PHP natif)
+- Tests de base
+
+---
+
+## Types de changements
+
+- **Added** : Nouvelles fonctionnalités
+- **Changed** : Changements dans les fonctionnalités existantes
+- **Deprecated** : Fonctionnalités qui seront supprimées
+- **Removed** : Fonctionnalités supprimées
+- **Fixed** : Corrections de bugs
+- **Security** : Corrections de sécurité
