@@ -33,7 +33,9 @@ class InvoiceService extends BaseService
     ) {
         // Utiliser InvoiceMapper par défaut si aucun mapper n'est fourni
         if ($mapper === null) {
-            $mapper = MapperFactory::createInvoiceMapper();
+            // Récupérer le mapping personnalisé depuis la configuration
+            $customMapping = $config->getMapping('invoice');
+            $mapper = MapperFactory::createInvoiceMapper($customMapping);
         }
 
         // Utiliser InvoiceValidator par défaut si aucun validator n'est fourni

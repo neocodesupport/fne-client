@@ -32,7 +32,9 @@ class RefundService extends BaseService
     ) {
         // Utiliser RefundMapper par défaut si aucun mapper n'est fourni
         if ($mapper === null) {
-            $mapper = MapperFactory::createRefundMapper();
+            // Récupérer le mapping personnalisé depuis la configuration
+            $customMapping = $config->getMapping('refund');
+            $mapper = MapperFactory::createRefundMapper($customMapping);
         }
 
         // Utiliser RefundValidator par défaut si aucun validator n'est fourni

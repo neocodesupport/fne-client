@@ -52,7 +52,9 @@ class PurchaseService extends BaseService
     ) {
         // Utiliser PurchaseMapper par défaut si aucun mapper n'est fourni
         if ($mapper === null) {
-            $mapper = MapperFactory::createPurchaseMapper();
+            // Récupérer le mapping personnalisé depuis la configuration
+            $customMapping = $config->getMapping('purchase');
+            $mapper = MapperFactory::createPurchaseMapper($customMapping);
         }
 
         // Utiliser PurchaseValidator par défaut si aucun validator n'est fourni

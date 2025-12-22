@@ -43,6 +43,11 @@ class FNEConfig
     protected string $locale;
 
     /**
+     * Configuration du mapping personnalisé
+     */
+    protected array $mapping;
+
+    /**
      * Create a new FNE Config instance.
      *
      * @param  array<string, mixed>  $config  Configuration
@@ -53,9 +58,10 @@ class FNEConfig
         $this->baseUrl = $config['base_url'] ?? $this->getDefaultBaseUrl();
         $this->mode = $config['mode'] ?? 'test';
         $this->timeout = $config['timeout'] ?? 30;
-        $this->cacheEnabled = $config['cache_enabled'] ?? true;
-        $this->cacheTtl = $config['cache_ttl'] ?? 3600;
+        $this->cacheEnabled = $config['cache']['enabled'] ?? ($config['cache_enabled'] ?? true);
+        $this->cacheTtl = $config['cache']['ttl'] ?? ($config['cache_ttl'] ?? 3600);
         $this->locale = $config['locale'] ?? 'fr';
+        $this->mapping = $config['mapping'] ?? [];
     }
 
     /**
@@ -142,6 +148,27 @@ class FNEConfig
     public function getLocale(): string
     {
         return $this->locale;
+    }
+
+    /**
+     * Obtenir le mapping personnalisé pour un type donné.
+     *
+     * @param  string  $type  Type de mapping (invoice, purchase, refund)
+     * @return array<string, mixed>  Configuration de mapping
+     */
+    public function getMapping(string $type): array
+    {
+        return $this->mapping[$type] ?? [];
+    }
+
+    /**
+     * Obtenir toute la configuration de mapping.
+     *
+     * @return array<string, mixed>
+     */
+    public function getAllMappings(): array
+    {
+        return $this->mapping;
     }
 
     /**
