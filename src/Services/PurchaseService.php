@@ -88,6 +88,7 @@ class PurchaseService extends BaseService
      */
     protected function makeRequest(array $data): mixed
     {
+        // Le base_url inclut déjà /api pour l'API mock ou pas selon la configuration
         $url = rtrim($this->config->getBaseUrl(), '/') . '/external/invoices/sign';
 
         $options = [

@@ -79,6 +79,7 @@ class RefundService extends BaseService
         if (empty($invoiceId)) {
             throw new \InvalidArgumentException('Invoice ID is required for refund.');
         }
+        // Le base_url inclut déjà /api pour l'API mock ou pas selon la configuration
         $baseUrl = rtrim($this->config->getBaseUrl(), '/');
         $url = "{$baseUrl}/external/invoices/{$invoiceId}/refund";
 

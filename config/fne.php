@@ -21,7 +21,7 @@ return [
     | En production, l'URL sera fournie par la DGI.
     |
     */
-    'base_url' => env('FNE_BASE_URL', 'https://fne-api-mock.test'),
+    'base_url' => env('FNE_BASE_URL', 'https://fne-api-mock.test/api'),
 
     /*
     |--------------------------------------------------------------------------
