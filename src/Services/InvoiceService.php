@@ -9,6 +9,8 @@ use Neocode\FNE\Contracts\LoggerInterface;
 use Neocode\FNE\Contracts\MapperInterface;
 use Neocode\FNE\Contracts\ValidatorInterface;
 use Neocode\FNE\DTOs\ResponseDTO;
+use Neocode\FNE\Mappers\InvoiceMapper;
+use Neocode\FNE\Mappers\MapperFactory;
 
 /**
  * Service pour la gestion des factures de vente
@@ -28,6 +30,11 @@ class InvoiceService extends BaseService
         ?CacheInterface $cache = null,
         ?LoggerInterface $logger = null
     ) {
+        // Utiliser InvoiceMapper par défaut si aucun mapper n'est fourni
+        if ($mapper === null) {
+            $mapper = MapperFactory::createInvoiceMapper();
+        }
+
         parent::__construct($httpClient, $config, $mapper, $validator, $cache, $logger);
     }
 

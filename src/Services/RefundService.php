@@ -9,6 +9,7 @@ use Neocode\FNE\Contracts\LoggerInterface;
 use Neocode\FNE\Contracts\MapperInterface;
 use Neocode\FNE\Contracts\ValidatorInterface;
 use Neocode\FNE\DTOs\ResponseDTO;
+use Neocode\FNE\Mappers\MapperFactory;
 
 /**
  * Service pour la gestion des avoirs
@@ -28,6 +29,11 @@ class RefundService extends BaseService
         ?CacheInterface $cache = null,
         ?LoggerInterface $logger = null
     ) {
+        // Utiliser RefundMapper par défaut si aucun mapper n'est fourni
+        if ($mapper === null) {
+            $mapper = MapperFactory::createRefundMapper();
+        }
+
         parent::__construct($httpClient, $config, $mapper, $validator, $cache, $logger);
     }
 

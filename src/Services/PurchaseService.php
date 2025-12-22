@@ -9,6 +9,7 @@ use Neocode\FNE\Contracts\LoggerInterface;
 use Neocode\FNE\Contracts\MapperInterface;
 use Neocode\FNE\Contracts\ValidatorInterface;
 use Neocode\FNE\DTOs\ResponseDTO;
+use Neocode\FNE\Mappers\MapperFactory;
 
 /**
  * Service pour la gestion des bordereaux d'achat
@@ -28,6 +29,11 @@ class PurchaseService extends BaseService
         ?CacheInterface $cache = null,
         ?LoggerInterface $logger = null
     ) {
+        // Utiliser PurchaseMapper par défaut si aucun mapper n'est fourni
+        if ($mapper === null) {
+            $mapper = MapperFactory::createPurchaseMapper();
+        }
+
         parent::__construct($httpClient, $config, $mapper, $validator, $cache, $logger);
     }
 
