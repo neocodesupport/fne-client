@@ -2,7 +2,7 @@
 
 [![PHP Version](https://img.shields.io/badge/php-8.2%2B-blue.svg)](https://php.net)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-29%20passed-success.svg)](tests)
+[![Tests](https://img.shields.io/badge/tests-66%20passed-success.svg)](tests)
 
 SDK PHP framework-agnostic pour l'intégration de l'API FNE (Facture Normalisée Électronique). Compatible avec Laravel 11+, Symfony 7.4+ et PHP natif.
 
@@ -18,6 +18,9 @@ SDK PHP framework-agnostic pour l'intégration de l'API FNE (Facture Normalisée
 - ✅ **Installation interactive** : Assistant d'installation avec prompts
 - ✅ **Détection automatique** : Détection du framework lors de l'installation
 - ✅ **Gestion modulaire** : Modules activables via Laravel Pennant (Laravel uniquement)
+- ✅ **Mapping personnalisé** : Transformation flexible des données ERP vers le format FNE
+- ✅ **Intégration modèles** : Traits pour intégrer directement la certification dans vos modèles
+- ✅ **Support multi-framework** : Compatible Laravel Eloquent, Symfony Doctrine et PHP natif
 
 ## 📦 Installation
 
@@ -212,6 +215,61 @@ return [
 ];
 ```
 
+### Mapping Personnalisé
+
+Le package supporte le mapping personnalisé pour transformer vos données ERP vers le format FNE. Configurez le mapping dans `config/fne.php` :
+
+```php
+'mapping' => [
+    'invoice' => [
+        // Mapping des factures de vente
+        'clientCompanyName' => 'client.name',
+        'clientPhone' => 'customer.phone_number',
+        'clientEmail' => 'client.email',
+        'pointOfSale' => 'pos.code',
+        'establishment' => 'establishment.code',
+    ],
+    'purchase' => [
+        // Mapping des bordereaux d'achat
+        'clientCompanyName' => 'supplier.name',
+        'clientPhone' => 'supplier.phone',
+    ],
+    'refund' => [
+        // Mapping des avoirs
+        'items' => 'refund_items',
+    ],
+],
+```
+
+**Utilisation avec notation pointée :**
+- `'clientCompanyName' => 'client.name'` transforme `$data['client']['name']` en `$data['clientCompanyName']`
+- `'clientPhone' => 'customer.phone_number'` transforme `$data['customer']['phone_number']` en `$data['clientPhone']`
+
+Le mapping personnalisé est appliqué **avant** le mapping standard du package, permettant une transformation flexible de vos structures de données.
+
+**Exemple d'utilisation :**
+
+```php
+// Vos données ERP avec structure personnalisée
+$erpData = [
+    'invoiceType' => InvoiceType::SALE->value,
+    'client' => [
+        'name' => 'Entreprise Client',
+        'email' => 'client@example.com',
+    ],
+    'customer' => [
+        'phone_number' => '0123456789',
+    ],
+    'pos' => [
+        'code' => 'POS-001',
+    ],
+    'items' => [...],
+];
+
+// Le mapper applique automatiquement le mapping personnalisé
+$result = FNE::invoice()->sign($erpData);
+```
+
 ### Services Disponibles
 
 #### InvoiceService - Factures de Vente
@@ -287,7 +345,7 @@ $refund = FNE::refund()->issue($invoiceId, [
 
 ### Traits pour Modèles
 
-Le package fournit des traits pour intégrer facilement la certification FNE dans vos modèles.
+Le package fournit des traits pour intégrer facilement la certification FNE dans vos modèles. Les traits détectent automatiquement le framework (Laravel, Symfony, PHP natif) et utilisent le service container approprié.
 
 #### CertifiableInvoice - Factures de Vente
 
@@ -299,19 +357,39 @@ class Invoice extends Model
 {
     use CertifiableInvoice;
 
-    // Vos attributs...
+    protected $fillable = [
+        'invoice_type',
+        'payment_method',
+        'template',
+        'client_name',
+        'client_phone',
+        'client_email',
+        'point_of_sale',
+        'establishment',
+        // ... autres champs
+    ];
 }
 
-// Utilisation
+// Utilisation - Le trait extrait automatiquement les données du modèle
 $invoice = Invoice::find(1);
-$response = $invoice->certify(); // Certifie automatiquement avec les données du modèle
+$response = $invoice->certify(); // Certifie avec les données du modèle (toArray())
 
-// Ou avec des données personnalisées
+// Ou avec des données personnalisées (priorité sur les données du modèle)
 $response = $invoice->certify([
     'invoiceType' => InvoiceType::SALE->value,
     'items' => [...],
 ]);
+
+// Le mapping personnalisé est automatiquement appliqué si configuré
+// Les données du modèle sont transformées selon le mapping défini dans config/fne.php
 ```
+
+**Méthodes supportées pour l'extraction des données :**
+- `toArray()` (Laravel Eloquent)
+- `attributesToArray()` (Laravel Eloquent)
+- `getAttributes()` (Laravel Eloquent)
+- `__toArray()` (Symfony/Doctrine)
+- Cast en array (PHP natif)
 
 #### CertifiablePurchase - Bordereaux d'Achat
 
@@ -323,12 +401,28 @@ class Purchase extends Model
 {
     use CertifiablePurchase;
 
-    // Vos attributs...
+    protected $fillable = [
+        'invoice_type',
+        'payment_method',
+        'template',
+        'client_name',
+        'client_phone',
+        'client_email',
+        'point_of_sale',
+        'establishment',
+        // ... autres champs
+    ];
 }
 
-// Utilisation
+// Utilisation - Le trait extrait automatiquement les données du modèle
 $purchase = Purchase::find(1);
-$response = $purchase->submit(); // Soumet automatiquement avec les données du modèle
+$response = $purchase->submit(); // Soumet avec les données du modèle
+
+// Ou avec des données personnalisées
+$response = $purchase->submit([
+    'invoiceType' => InvoiceType::PURCHASE->value,
+    'items' => [...],
+]);
 ```
 
 #### CertifiableRefund - Avoirs
@@ -341,19 +435,31 @@ class Invoice extends Model
 {
     use CertifiableRefund;
 
-    // Le modèle doit avoir un attribut fne_id ou fne_invoice_id
-    protected $fillable = ['fne_id', ...];
+    // Le modèle doit avoir un attribut fne_id, fne_invoice_id ou une méthode getFneInvoiceId()
+    protected $fillable = ['fne_id', 'fne_invoice_id', ...];
+    
+    // Ou définir une méthode personnalisée
+    public function getFneInvoiceId(): ?string
+    {
+        return $this->fne_id ?? $this->fne_invoice_id;
+    }
 }
 
-// Utilisation
+// Utilisation - Le trait trouve automatiquement l'ID FNE de la facture
 $invoice = Invoice::find(1); // Facture déjà certifiée avec fne_id
 $response = $invoice->issueRefund([
     [
-        'id' => 'uuid-de-l-item', // UUID de l'item à rembourser
+        'id' => 'uuid-de-l-item', // UUID de l'item à rembourser (depuis la facture certifiée)
         'quantity' => 1.0,
     ],
 ]);
 ```
+
+**Détection automatique de l'ID FNE :**
+Le trait cherche l'ID FNE dans l'ordre suivant :
+1. Attribut `fne_id`
+2. Attribut `fne_invoice_id`
+3. Méthode `getFneInvoiceId()`
 
 #### Certifiable - Trait Combiné
 
@@ -367,19 +473,51 @@ class Document extends Model
 {
     use Certifiable;
 
-    // Méthodes disponibles :
-    // - certify() : Certifier comme facture
-    // - submitPurchase() : Soumettre comme bordereau
-    // - issueRefund() : Émettre un avoir
+    protected $fillable = [
+        'document_type', // 'invoice' ou 'purchase'
+        'invoice_type',
+        'payment_method',
+        'template',
+        'client_name',
+        'fne_id', // Pour les avoirs
+        // ... autres champs
+    ];
 }
 
 // Utilisation
 $document = Document::find(1);
-$response = $document->certify(); // Facture
-$response = $document->submitPurchase(); // Bordereau
+$response = $document->certify(); // Certifier comme facture
+$response = $document->submitPurchase(); // Soumettre comme bordereau
+$response = $document->issueRefund([...]); // Émettre un avoir
 ```
 
-**Note** : Les traits détectent automatiquement le framework (Laravel, Symfony, PHP natif) et utilisent le service container approprié.
+**Intégration avec le Mapping Personnalisé :**
+
+Lorsque vous utilisez les traits avec des modèles, le mapping personnalisé configuré dans `config/fne.php` est automatiquement appliqué. Cela permet de transformer vos structures de données ERP directement depuis vos modèles :
+
+```php
+// config/fne.php
+'mapping' => [
+    'invoice' => [
+        'clientCompanyName' => 'client_name', // Colonne de votre table
+        'clientPhone' => 'phone',
+        'pointOfSale' => 'pos_code',
+    ],
+],
+
+// Votre modèle
+class Invoice extends Model
+{
+    use CertifiableInvoice;
+    
+    // Colonnes de votre table : client_name, phone, pos_code
+}
+
+// Le mapping est appliqué automatiquement lors de la certification
+$invoice->certify(); // Les données sont transformées selon le mapping
+```
+
+**Note** : Les traits détectent automatiquement le framework (Laravel, Symfony, PHP natif) et utilisent le service container approprié. Ils supportent également l'extraction de données depuis différents types de modèles (Eloquent, Doctrine, objets PHP natifs).
 
 ### Enums Disponibles
 
@@ -471,7 +609,112 @@ class InvoiceController extends Controller
 }
 ```
 
+### Utilisation Avancée avec Modèles et Mapping
+
+#### Exemple Complet : Intégration ERP avec Mapping Personnalisé
+
+```php
+// config/fne.php
+'mapping' => [
+    'invoice' => [
+        'clientCompanyName' => 'customer.company_name',
+        'clientPhone' => 'customer.phone',
+        'clientEmail' => 'customer.email',
+        'pointOfSale' => 'location.pos_code',
+        'establishment' => 'location.est_code',
+        'items' => 'line_items',
+    ],
+],
+
+// Modèle Invoice
+class Invoice extends Model
+{
+    use CertifiableInvoice;
+    
+    protected $fillable = [
+        'customer_id',
+        'location_id',
+        'invoice_type',
+        'payment_method',
+        'template',
+    ];
+    
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
+    }
+    
+    public function location()
+    {
+        return $this->belongsTo(Location::class);
+    }
+    
+    public function lineItems()
+    {
+        return $this->hasMany(InvoiceItem::class);
+    }
+    
+    // Méthode personnalisée pour extraire les données avec relations
+    public function getFneData(): array
+    {
+        return [
+            'invoiceType' => $this->invoice_type,
+            'paymentMethod' => $this->payment_method,
+            'template' => $this->template,
+            'customer' => [
+                'company_name' => $this->customer->company_name,
+                'phone' => $this->customer->phone,
+                'email' => $this->customer->email,
+            ],
+            'location' => [
+                'pos_code' => $this->location->pos_code,
+                'est_code' => $this->location->est_code,
+            ],
+            'line_items' => $this->lineItems->map(function ($item) {
+                return [
+                    'description' => $item->description,
+                    'quantity' => $item->quantity,
+                    'amount' => $item->amount,
+                    'taxes' => [$item->tax_type],
+                ];
+            })->toArray(),
+        ];
+    }
+}
+
+// Utilisation
+$invoice = Invoice::with(['customer', 'location', 'lineItems'])->find(1);
+$response = $invoice->certify(); // Mapping automatique appliqué
+```
+
+#### Utilisation Programmatique du Mapping
+
+```php
+use Neocode\FNE\Services\InvoiceService;
+use Neocode\FNE\Mappers\InvoiceMapper;
+
+// Créer un mapper avec mapping personnalisé
+$customMapping = [
+    'clientCompanyName' => 'client.name',
+    'clientPhone' => 'customer.phone_number',
+];
+
+$mapper = new InvoiceMapper($customMapping);
+
+// Utiliser avec le service
+$service = new InvoiceService($httpClient, $config, $mapper);
+$result = $service->sign($erpData);
+```
+
 ## 🧪 Tests
+
+Le package inclut une suite de tests complète avec **66 tests** couvrant :
+
+- ✅ Tests unitaires (Cache, DTOs, Enums, Mappers, Validators)
+- ✅ Tests d'intégration (Services avec API mock)
+- ✅ Tests de traits (CertifiableInvoice, CertifiablePurchase, CertifiableRefund)
+- ✅ Tests de mapping personnalisé
+- ✅ Tests d'intégration modèles
 
 ```bash
 # Exécuter tous les tests
@@ -482,6 +725,12 @@ composer test-coverage
 
 # Tests spécifiques
 ./vendor/bin/pest --filter="InvoiceService"
+
+# Tests d'intégration API
+./vendor/bin/pest tests/Feature/Services
+
+# Tests de mapping
+./vendor/bin/pest tests/Unit/Mappers
 ```
 
 ## 📚 API Reference
@@ -510,16 +759,38 @@ class InvoiceService extends BaseService
     /**
      * Certifie une facture de vente
      * 
-     * @param array<string, mixed> $data Données de la facture
+     * @param array<string, mixed>|null $data Données de la facture (optionnel si setModel() ou setData() utilisé)
      * @return ResponseDTO Réponse de l'API avec la facture certifiée
      * @throws ValidationException Si les données sont invalides
      * @throws AuthenticationException Si l'API key est invalide
      * @throws BadRequestException Si la requête est mal formée
      * @throws ServerException Si une erreur serveur survient
      */
-    public function sign(array $data): ResponseDTO
+    public function sign(?array $data = null): ResponseDTO
+    
+    /**
+     * Définir un modèle pour extraction automatique des données
+     * 
+     * @param mixed $model Modèle avec toArray() ou attributesToArray()
+     * @return $this
+     */
+    public function setModel(mixed $model): self
+    
+    /**
+     * Définir des données de contexte
+     * 
+     * @param array<string, mixed> $data
+     * @return $this
+     */
+    public function setData(array $data): self
 }
 ```
+
+**Ordre de priorité pour la récupération des données :**
+1. Données explicites passées à `sign($data)`
+2. Données de contexte via `setData()`
+3. Données du modèle via `setModel()`
+4. Exception si aucune donnée disponible
 
 ### PurchaseService
 
@@ -531,11 +802,27 @@ class PurchaseService extends BaseService
     /**
      * Soumet un bordereau d'achat
      * 
-     * @param array<string, mixed> $data Données du bordereau
+     * @param array<string, mixed>|null $data Données du bordereau (optionnel si setModel() ou setData() utilisé)
      * @return ResponseDTO Réponse de l'API avec le bordereau certifié
      * @throws ValidationException Si les données sont invalides
      */
-    public function submit(array $data): ResponseDTO
+    public function submit(?array $data = null): ResponseDTO
+    
+    /**
+     * Définir un modèle pour extraction automatique des données
+     * 
+     * @param mixed $model Modèle avec toArray() ou attributesToArray()
+     * @return $this
+     */
+    public function setModel(mixed $model): self
+    
+    /**
+     * Définir des données de contexte
+     * 
+     * @param array<string, mixed> $data
+     * @return $this
+     */
+    public function setData(array $data): self
 }
 ```
 
@@ -556,6 +843,30 @@ class RefundService extends BaseService
      * @throws NotFoundException Si la facture n'existe pas
      */
     public function issue(string $invoiceId, array $items): ResponseDTO
+}
+```
+
+### BaseMapper
+
+Classe de base pour les mappers avec support du mapping personnalisé.
+
+```php
+abstract class BaseMapper implements MapperInterface
+{
+    /**
+     * Vérifier si un mapping personnalisé est configuré
+     * 
+     * @return bool
+     */
+    public function hasMapping(): bool
+    
+    /**
+     * Transformer les données ERP vers le format FNE
+     * 
+     * @param array<string, mixed> $data Données ERP
+     * @return array<string, mixed> Données au format FNE
+     */
+    public function map(array $data): array
 }
 ```
 
