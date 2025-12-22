@@ -3,41 +3,48 @@
 namespace Neocode\FNE\DTOs;
 
 /**
- * DTO pour les réponses de l'API FNE
+ * DTO pour la réponse complète de l'API FNE
+ *
+ * @property string $ncc Identifiant contribuable
+ * @property string $reference Numéro de référence FNE
+ * @property string $token URL complète de vérification QR code
+ * @property bool $warning Alerte si stock de stickers faible
+ * @property int $balanceSticker Nombre de stickers restants
+ * @property ?InvoiceResponseDTO $invoice Informations facture (null pour refund)
  *
  * @package Neocode\FNE\DTOs
  */
-class ResponseDTO
+class ResponseDTO extends BaseDTO
 {
     /**
-     * NCC (Numéro Contribuable)
+     * Identifiant contribuable (ex: "9606123E")
      */
-    public string $ncc;
+    public readonly string $ncc;
 
     /**
-     * Référence de la facture/avoir
+     * Numéro de référence FNE (ex: "9606123E25000000019")
      */
-    public string $reference;
+    public readonly string $reference;
 
     /**
-     * Token de vérification
+     * URL complète de vérification QR code
      */
-    public string $token;
+    public readonly string $token;
 
     /**
-     * Warning (alerte sur le stock de sticker)
+     * Alerte si stock de stickers faible (false = OK)
      */
-    public bool $warning;
+    public readonly bool $warning;
 
     /**
-     * Balance sticker
+     * Nombre de stickers restants
      */
-    public int $balanceSticker;
+    public readonly int $balanceSticker;
 
     /**
-     * Invoice (objet facture, null pour les avoirs)
+     * Informations facture (null pour refund)
      */
-    public ?InvoiceResponseDTO $invoice = null;
+    public readonly ?InvoiceResponseDTO $invoice;
 
     /**
      * Create a new ResponseDTO instance.
@@ -76,13 +83,13 @@ class ResponseDTO
             $data['reference'] ?? '',
             $data['token'] ?? '',
             $data['warning'] ?? false,
-            $data['balance_sticker'] ?? 0,
+            $data['balance_sticker'] ?? $data['balanceSticker'] ?? 0,
             $invoice
         );
     }
 
     /**
-     * Vérifier si c'est une facture (pas un avoir).
+     * Vérifie si c'est une facture (pas un avoir).
      *
      * @return bool
      */
@@ -92,30 +99,13 @@ class ResponseDTO
     }
 
     /**
-     * Vérifier si c'est un avoir.
+     * Vérifie si c'est un avoir.
      *
      * @return bool
      */
     public function isRefund(): bool
     {
-        return $this->invoice === null;
-    }
-
-    /**
-     * Convertir en array.
-     *
-     * @return array<string, mixed>
-     */
-    public function toArray(): array
-    {
-        return [
-            'ncc' => $this->ncc,
-            'reference' => $this->reference,
-            'token' => $this->token,
-            'warning' => $this->warning,
-            'balance_sticker' => $this->balanceSticker,
-            'invoice' => $this->invoice?->toArray(),
-        ];
+        return $this->invoice === null || str_starts_with($this->reference, 'A');
     }
 }
 
