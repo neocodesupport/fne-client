@@ -38,7 +38,7 @@ class GuzzleHttpClient implements HttpClientInterface
      * @param  array<string, mixed>  $options  Options (headers, body, timeout, etc.)
      * @return ResponseInterface
      */
-    public function request(string $method, string $uri, array $options = []): ResponseInterface
+    public function request(string $method, string $uri, array $options = []): mixed
     {
         $guzzleOptions = [
             'headers' => $options['headers'] ?? [],

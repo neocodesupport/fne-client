@@ -41,7 +41,7 @@ class LaravelHttpClient implements HttpClientInterface
      * @param  array<string, mixed>  $options  Options (headers, body, timeout, etc.)
      * @return \Illuminate\Http\Client\Response
      */
-    public function request(string $method, string $uri, array $options = []): \Illuminate\Http\Client\Response
+    public function request(string $method, string $uri, array $options = []): mixed
     {
         $headers = $options['headers'] ?? [];
         $body = $options['body'] ?? null;
