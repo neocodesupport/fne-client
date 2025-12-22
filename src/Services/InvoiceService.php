@@ -81,14 +81,19 @@ class InvoiceService extends BaseService
      */
     protected function processResponse(mixed $response): array
     {
-        // TODO: Traiter la réponse selon le type (PSR-7 ResponseInterface ou autre)
-        // Pour l'instant, on suppose que c'est un array
-        if (is_array($response)) {
-            return $response;
+        // Laravel HTTP Client Response
+        if ($response instanceof \Illuminate\Http\Client\Response) {
+            $data = $response->json();
+
+            if ($data === null) {
+                throw new \RuntimeException('Invalid JSON response from API');
+            }
+
+            return $data;
         }
 
-        // Si c'est une ResponseInterface PSR-7
-        if (method_exists($response, 'getBody')) {
+        // PSR-7 ResponseInterface (Guzzle)
+        if ($response instanceof \Psr\Http\Message\ResponseInterface) {
             $body = $response->getBody()->getContents();
             $data = json_decode($body, true);
 
@@ -99,7 +104,12 @@ class InvoiceService extends BaseService
             return $data;
         }
 
-        throw new \RuntimeException('Unsupported response type');
+        // Array direct (pour les tests)
+        if (is_array($response)) {
+            return $response;
+        }
+
+        throw new \RuntimeException('Unsupported response type: ' . get_class($response));
     }
 
     /**
