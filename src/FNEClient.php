@@ -2,6 +2,11 @@
 
 namespace Neocode\FNE;
 
+use Neocode\FNE\Config\FNEConfig;
+use Neocode\FNE\Contracts\CacheInterface;
+use Neocode\FNE\Contracts\HttpClientInterface;
+use Neocode\FNE\Contracts\LoggerInterface;
+
 /**
  * FNE Client - Point d'entrée principal du package
  *
@@ -10,41 +15,108 @@ namespace Neocode\FNE;
 class FNEClient
 {
     /**
+     * Configuration
+     */
+    protected FNEConfig $config;
+
+    /**
+     * Client HTTP
+     */
+    protected HttpClientInterface $httpClient;
+
+    /**
+     * Cache
+     */
+    protected ?CacheInterface $cache;
+
+    /**
+     * Logger
+     */
+    protected ?LoggerInterface $logger;
+
+    /**
+     * Services lazy-loaded
+     */
+    protected ?Services\InvoiceService $invoiceService = null;
+    protected ?Services\PurchaseService $purchaseService = null;
+    protected ?Services\RefundService $refundService = null;
+
+    /**
      * Create a new FNE Client instance.
+     *
+     * @param  HttpClientInterface  $httpClient  Client HTTP
+     * @param  FNEConfig  $config  Configuration
+     * @param  CacheInterface|null  $cache  Cache (optionnel)
+     * @param  LoggerInterface|null  $logger  Logger (optionnel)
      */
-    public function __construct()
-    {
-        // TODO: Injection de dépendances (HttpClient, Cache, Logger)
+    public function __construct(
+        HttpClientInterface $httpClient,
+        FNEConfig $config,
+        ?CacheInterface $cache = null,
+        ?LoggerInterface $logger = null
+    ) {
+        $this->httpClient = $httpClient;
+        $this->config = $config;
+        $this->cache = $cache;
+        $this->logger = $logger;
+
+        // Valider la configuration
+        $this->config->validate();
     }
 
     /**
-     * Get the invoice service.
+     * Get the invoice service (lazy loading).
      *
-     * @return void
+     * @return Services\InvoiceService
      */
-    public function invoice()
+    public function invoice(): Services\InvoiceService
     {
-        // TODO: Retourner InvoiceService
+        if ($this->invoiceService === null) {
+            // TODO: Créer InvoiceService avec dépendances
+            // $this->invoiceService = new Services\InvoiceService(...);
+        }
+
+        return $this->invoiceService;
     }
 
     /**
-     * Get the purchase service.
+     * Get the purchase service (lazy loading).
      *
-     * @return void
+     * @return Services\PurchaseService
      */
-    public function purchase()
+    public function purchase(): Services\PurchaseService
     {
-        // TODO: Retourner PurchaseService
+        if ($this->purchaseService === null) {
+            // TODO: Créer PurchaseService avec dépendances
+            // $this->purchaseService = new Services\PurchaseService(...);
+        }
+
+        return $this->purchaseService;
     }
 
     /**
-     * Get the refund service.
+     * Get the refund service (lazy loading).
      *
-     * @return void
+     * @return Services\RefundService
      */
-    public function refund()
+    public function refund(): Services\RefundService
     {
-        // TODO: Retourner RefundService
+        if ($this->refundService === null) {
+            // TODO: Créer RefundService avec dépendances
+            // $this->refundService = new Services\RefundService(...);
+        }
+
+        return $this->refundService;
+    }
+
+    /**
+     * Get the configuration.
+     *
+     * @return FNEConfig
+     */
+    public function getConfig(): FNEConfig
+    {
+        return $this->config;
     }
 }
 
