@@ -66,8 +66,13 @@ class ResponseHandler
         $message = $body['message'] ?? self::getDefaultMessage($statusCode);
         $errors = $body['errors'] ?? [];
 
+        // Si c'est une erreur de validation (422) ou BadRequest (400) avec des erreurs, utiliser ValidationException
+        if ($statusCode === 422 || ($statusCode === 400 && !empty($errors))) {
+            throw new \Neocode\FNE\Exceptions\ValidationException($message, $errors);
+        }
+
         match ($statusCode) {
-            400, 422 => throw new BadRequestException($message, $errors),
+            400 => throw new BadRequestException($message, $errors),
             401, 403 => throw new AuthenticationException($message),
             404 => throw new NotFoundException($message),
             default => throw new ServerException($message),

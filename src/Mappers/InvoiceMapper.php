@@ -35,11 +35,11 @@ class InvoiceMapper extends BaseMapper
 
         // Champs conditionnels
         if (($mapped['template'] === InvoiceTemplate::B2B->value) && isset($data['clientNcc'])) {
-            $mapped['clientNcc'] = $data['clientNcc'];
+            $mapped['clientNcc'] = (string) $data['clientNcc']; // S'assurer que c'est une string
         }
 
         if (($mapped['isRne'] === true) && isset($data['rne'])) {
-            $mapped['rne'] = $data['rne'];
+            $mapped['rne'] = (string) $data['rne']; // S'assurer que c'est une string
         }
 
         if (isset($data['clientSellerName'])) {
@@ -56,8 +56,8 @@ class InvoiceMapper extends BaseMapper
 
         // Gestion des devises étrangères
         if (!empty($data['foreignCurrency'] ?? '')) {
-            $mapped['foreignCurrency'] = $data['foreignCurrency'];
-            $mapped['foreignCurrencyRate'] = $data['foreignCurrencyRate'] ?? 0;
+            $mapped['foreignCurrency'] = (string) ($data['foreignCurrency'] ?? '');
+            $mapped['foreignCurrencyRate'] = (float) ($data['foreignCurrencyRate'] ?? 0);
         } else {
             $mapped['foreignCurrency'] = '';
             $mapped['foreignCurrencyRate'] = 0;

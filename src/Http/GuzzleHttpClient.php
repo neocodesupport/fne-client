@@ -65,9 +65,20 @@ class GuzzleHttpClient implements HttpClientInterface
         // Ajouter le body si présent
         if (isset($options['body'])) {
             if (is_string($options['body'])) {
-                $guzzleOptions['body'] = $options['body'];
+                // Si c'est déjà une string JSON, essayer de la décoder
+                $decoded = json_decode($options['body'], true);
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    // C'est du JSON valide, utiliser 'json' pour que Guzzle l'encode automatiquement
+                    $guzzleOptions['json'] = $decoded;
+                } else {
+                    // Sinon, utiliser le body tel quel
+                    $guzzleOptions['body'] = $options['body'];
+                }
+            } elseif (is_array($options['body'])) {
+                // Si c'est déjà un array, utiliser 'json'
+                $guzzleOptions['json'] = $options['body'];
             } else {
-                $guzzleOptions['json'] = json_decode($options['body'], true) ?? $options['body'];
+                $guzzleOptions['body'] = $options['body'];
             }
         }
 
