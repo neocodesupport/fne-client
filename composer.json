@@ -38,8 +38,13 @@
         "illuminate/http": "^11.0 Required for Laravel HTTP Client",
         "guzzlehttp/guzzle": "^7.0 Required for HTTP client if Laravel HTTP is not available",
         "symfony/cache": "^7.4 Optional for Symfony cache integration",
-        "symfony/http-client": "^7.4 Optional for Symfony HTTP client"
+        "symfony/http-client": "^7.4 Optional for Symfony HTTP client",
+        "symfony/yaml": "^7.4 Required for Symfony configuration file generation",
+        "symfony/console": "^7.4 Required for Symfony commands"
     },
+    "bin": [
+        "bin/fne-install"
+    ],
     "autoload": {
         "psr-4": {
             "Neocode\\FNE\\": "src/"
