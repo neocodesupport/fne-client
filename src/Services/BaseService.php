@@ -114,11 +114,20 @@ abstract class BaseService
      *
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
+     * @throws \Neocode\FNE\Exceptions\MappingException
      */
     protected function map(array $data): array
     {
         if ($this->mapper) {
-            return $this->mapper->map($data);
+            try {
+                return $this->mapper->map($data);
+            } catch (\Exception $e) {
+                throw new \Neocode\FNE\Exceptions\MappingException(
+                    'Mapping failed: ' . $e->getMessage(),
+                    ['original_error' => $e->getMessage()],
+                    $e
+                );
+            }
         }
 
         return $data;
