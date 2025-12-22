@@ -72,8 +72,14 @@ class FNEClient
     public function invoice(): Services\InvoiceService
     {
         if ($this->invoiceService === null) {
-            // TODO: Créer InvoiceService avec dépendances
-            // $this->invoiceService = new Services\InvoiceService(...);
+            $this->invoiceService = new Services\InvoiceService(
+                $this->httpClient,
+                $this->config,
+                null, // Mapper sera injecté plus tard
+                null, // Validator sera injecté plus tard
+                $this->cache,
+                $this->logger
+            );
         }
 
         return $this->invoiceService;
@@ -87,8 +93,14 @@ class FNEClient
     public function purchase(): Services\PurchaseService
     {
         if ($this->purchaseService === null) {
-            // TODO: Créer PurchaseService avec dépendances
-            // $this->purchaseService = new Services\PurchaseService(...);
+            $this->purchaseService = new Services\PurchaseService(
+                $this->httpClient,
+                $this->config,
+                null, // Mapper sera injecté plus tard
+                null, // Validator sera injecté plus tard
+                $this->cache,
+                $this->logger
+            );
         }
 
         return $this->purchaseService;
@@ -102,8 +114,14 @@ class FNEClient
     public function refund(): Services\RefundService
     {
         if ($this->refundService === null) {
-            // TODO: Créer RefundService avec dépendances
-            // $this->refundService = new Services\RefundService(...);
+            $this->refundService = new Services\RefundService(
+                $this->httpClient,
+                $this->config,
+                null, // Mapper sera injecté plus tard
+                null, // Validator sera injecté plus tard
+                $this->cache,
+                $this->logger
+            );
         }
 
         return $this->refundService;
