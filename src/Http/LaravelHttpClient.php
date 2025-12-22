@@ -2,7 +2,9 @@
 
 namespace Neocode\FNE\Http;
 
+use Neocode\FNE\Config\FNEConfig;
 use Neocode\FNE\Contracts\HttpClientInterface;
+use Neocode\FNE\Contracts\LoggerInterface;
 use Neocode\FNE\Http\ResponseHandler;
 
 /**
@@ -18,14 +20,26 @@ class LaravelHttpClient implements HttpClientInterface
     protected \Illuminate\Http\Client\Factory $client;
 
     /**
+     * Configuration
+     */
+    protected FNEConfig $config;
+
+    /**
+     * Logger
+     */
+    protected ?LoggerInterface $logger;
+
+    /**
      * Create a new LaravelHttpClient instance.
      */
-    public function __construct()
+    public function __construct(FNEConfig $config, ?LoggerInterface $logger = null)
     {
         if (!class_exists(\Illuminate\Http\Client\Factory::class)) {
             throw new \RuntimeException('Laravel HTTP Client is not available.');
         }
 
+        $this->config = $config;
+        $this->logger = $logger;
         $this->client = new \Illuminate\Http\Client\Factory();
     }
 
@@ -39,11 +53,17 @@ class LaravelHttpClient implements HttpClientInterface
      */
     public function request(string $method, string $uri, array $options = []): mixed
     {
-        $headers = $options['headers'] ?? [];
+        $headers = $options['headers'] ?? [
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+            'Authorization' => 'Bearer ' . $this->config->getApiKey(),
+        ];
         $body = $options['body'] ?? null;
-        $timeout = $options['timeout'] ?? 30;
+        $timeout = $options['timeout'] ?? $this->config->getTimeout();
 
-        $request = $this->client->timeout($timeout);
+        $request = $this->client
+            ->baseUrl($this->config->getBaseUrl())
+            ->timeout($timeout);
 
         // Ajouter les headers
         foreach ($headers as $key => $value) {

@@ -19,10 +19,11 @@ class CacheFactory
      */
     public static function create(): ?CacheInterface
     {
-        $framework = FrameworkDetector::detect();
+        $detector = new FrameworkDetector();
+        $framework = $detector->detect();
 
         return match ($framework) {
-            'laravel' => self::createLaravelCache(),
+            \Neocode\FNE\Install\FrameworkType::LARAVEL => self::createLaravelCache(),
             default => self::createArrayCache(),
         };
     }
