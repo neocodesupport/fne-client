@@ -121,6 +121,13 @@ abstract class BaseService
         if ($this->mapper) {
             try {
                 return $this->mapper->map($data);
+            } catch (\InvalidArgumentException $e) {
+                // Convertir InvalidArgumentException en MappingException
+                throw new \Neocode\FNE\Exceptions\MappingException(
+                    'Mapping failed: ' . $e->getMessage(),
+                    ['original_error' => $e->getMessage()],
+                    $e
+                );
             } catch (\Exception $e) {
                 throw new \Neocode\FNE\Exceptions\MappingException(
                     'Mapping failed: ' . $e->getMessage(),

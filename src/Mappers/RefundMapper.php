@@ -82,14 +82,9 @@ class RefundMapper extends BaseMapper
      */
     protected function normalizeQuantity(mixed $quantity): float
     {
-        $value = (float) $quantity;
-
-        // La quantité doit être positive
-        if ($value <= 0) {
-            throw new \InvalidArgumentException('Quantity must be greater than 0');
-        }
-
-        return $value;
+        // Le mapper ne valide pas la quantité, c'est le rôle du validator
+        // On normalise juste le type
+        return (float) $quantity;
     }
 }
 
