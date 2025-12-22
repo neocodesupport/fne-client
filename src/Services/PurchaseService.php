@@ -10,6 +10,7 @@ use Neocode\FNE\Contracts\MapperInterface;
 use Neocode\FNE\Contracts\ValidatorInterface;
 use Neocode\FNE\DTOs\ResponseDTO;
 use Neocode\FNE\Mappers\MapperFactory;
+use Neocode\FNE\Validation\ValidatorFactory;
 
 /**
  * Service pour la gestion des bordereaux d'achat
@@ -32,6 +33,11 @@ class PurchaseService extends BaseService
         // Utiliser PurchaseMapper par défaut si aucun mapper n'est fourni
         if ($mapper === null) {
             $mapper = MapperFactory::createPurchaseMapper();
+        }
+
+        // Utiliser PurchaseValidator par défaut si aucun validator n'est fourni
+        if ($validator === null) {
+            $validator = ValidatorFactory::createPurchaseValidator();
         }
 
         parent::__construct($httpClient, $config, $mapper, $validator, $cache, $logger);

@@ -11,6 +11,7 @@ use Neocode\FNE\Contracts\ValidatorInterface;
 use Neocode\FNE\DTOs\ResponseDTO;
 use Neocode\FNE\Mappers\InvoiceMapper;
 use Neocode\FNE\Mappers\MapperFactory;
+use Neocode\FNE\Validation\ValidatorFactory;
 
 /**
  * Service pour la gestion des factures de vente
@@ -33,6 +34,11 @@ class InvoiceService extends BaseService
         // Utiliser InvoiceMapper par défaut si aucun mapper n'est fourni
         if ($mapper === null) {
             $mapper = MapperFactory::createInvoiceMapper();
+        }
+
+        // Utiliser InvoiceValidator par défaut si aucun validator n'est fourni
+        if ($validator === null) {
+            $validator = ValidatorFactory::createInvoiceValidator();
         }
 
         parent::__construct($httpClient, $config, $mapper, $validator, $cache, $logger);

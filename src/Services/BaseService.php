@@ -142,8 +142,10 @@ abstract class BaseService
     protected function validate(array $data): void
     {
         if ($this->validator) {
-            $rules = $this->getValidationRules();
-            $this->validator->validate($data, $rules);
+            // Les validateurs ont leurs propres règles intégrées
+            // On peut passer des règles supplémentaires via getValidationRules() si nécessaire
+            $additionalRules = $this->getValidationRules();
+            $this->validator->validate($data, $additionalRules);
         }
     }
 

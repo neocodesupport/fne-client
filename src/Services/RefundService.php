@@ -10,6 +10,7 @@ use Neocode\FNE\Contracts\MapperInterface;
 use Neocode\FNE\Contracts\ValidatorInterface;
 use Neocode\FNE\DTOs\ResponseDTO;
 use Neocode\FNE\Mappers\MapperFactory;
+use Neocode\FNE\Validation\ValidatorFactory;
 
 /**
  * Service pour la gestion des avoirs
@@ -32,6 +33,11 @@ class RefundService extends BaseService
         // Utiliser RefundMapper par défaut si aucun mapper n'est fourni
         if ($mapper === null) {
             $mapper = MapperFactory::createRefundMapper();
+        }
+
+        // Utiliser RefundValidator par défaut si aucun validator n'est fourni
+        if ($validator === null) {
+            $validator = ValidatorFactory::createRefundValidator();
         }
 
         parent::__construct($httpClient, $config, $mapper, $validator, $cache, $logger);
