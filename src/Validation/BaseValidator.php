@@ -75,7 +75,16 @@ abstract class BaseValidator implements ValidatorInterface
         foreach ($rules as $field => $fieldRules) {
             $value = $data[$field] ?? null;
 
-            // Si le champ est un tableau (ex: items.*.description)
+            // Si le champ est un tableau imbriqué (ex: items.*.taxes.*)
+            // On vérifie si le champ se termine par '.*' après avoir un '.*.' au milieu
+            if (str_contains($field, '.*.') && str_ends_with($field, '.*')) {
+                // Gérer les tableaux imbriqués (ex: items.*.taxes.*)
+                $fieldParts = explode('.*.', $field);
+                $errors = array_merge($errors, $this->validateNestedArrayField($data, $fieldParts, $fieldRules));
+                continue;
+            }
+
+            // Si le champ est un tableau simple (ex: items.*.description)
             if (str_contains($field, '.*.')) {
                 [$parentField, $childField] = explode('.*.', $field, 2);
                 $errors = array_merge($errors, $this->validateArrayField($data, $parentField, $childField, $fieldRules));
@@ -117,6 +126,49 @@ abstract class BaseValidator implements ValidatorInterface
 
             if (!empty($fieldErrors)) {
                 $errors[$fieldKey] = $fieldErrors;
+            }
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Valider un champ de tableau imbriqué (ex: items.*.taxes.*).
+     *
+     * @param  array<string, mixed>  $data
+     * @param  array<int, string>  $parts  Parties du chemin (ex: ['items', 'taxes', ''])
+     * @param  array<int, string>  $rules
+     * @return array<string, array<int, string>>
+     */
+    protected function validateNestedArrayField(array $data, array $parts, array $rules): array
+    {
+        $errors = [];
+
+        // Exemple: items.*.taxes.* -> ['items', 'taxes', '']
+        // Le dernier élément peut être vide car c'est pour valider chaque élément du tableau taxes
+        $parentField = $parts[0] ?? ''; // 'items'
+        $nestedField = $parts[1] ?? ''; // 'taxes'
+
+        if (empty($parentField) || empty($nestedField)) {
+            return $errors;
+        }
+
+        if (!isset($data[$parentField]) || !is_array($data[$parentField])) {
+            return $errors;
+        }
+
+        foreach ($data[$parentField] as $index => $item) {
+            if (!isset($item[$nestedField]) || !is_array($item[$nestedField])) {
+                continue;
+            }
+
+            foreach ($item[$nestedField] as $taxIndex => $taxValue) {
+                $fieldKey = "{$parentField}.{$index}.{$nestedField}.{$taxIndex}";
+                $fieldErrors = $this->validateField($fieldKey, $taxValue, $rules);
+
+                if (!empty($fieldErrors)) {
+                    $errors[$fieldKey] = $fieldErrors;
+                }
             }
         }
 
