@@ -19,16 +19,20 @@ trait CertifiablePurchase
      */
     public function submit(?array $data = null): ResponseDTO
     {
-        // Récupérer les données du modèle si aucune donnée n'est fournie
-        if ($data === null) {
-            $data = $this->getFneData();
-        }
-
         // Obtenir le client FNE
         $fneClient = $this->getFneClient();
+        $purchaseService = $fneClient->purchase();
 
-        // Soumettre le bordereau
-        return $fneClient->purchase()->submit($data);
+        // Si aucune donnée n'est fournie, utiliser le modèle directement
+        if ($data === null) {
+            // Passer le modèle au service pour qu'il puisse extraire les données
+            $purchaseService->setModel($this);
+            // Appeler submit() sans paramètre pour utiliser les données du modèle
+            return $purchaseService->submit();
+        }
+
+        // Si des données sont fournies, les utiliser directement
+        return $purchaseService->submit($data);
     }
 
     /**

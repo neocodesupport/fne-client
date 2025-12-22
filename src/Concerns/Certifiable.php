@@ -18,6 +18,28 @@ trait Certifiable
     }
 
     /**
+     * Certifier la facture via l'API FNE (alias pour certify()).
+     *
+     * @param  array<string, mixed>|null  $data  Données optionnelles (si null, utilise les données du modèle)
+     * @return ResponseDTO
+     */
+    public function certifyInvoice(?array $data = null): ResponseDTO
+    {
+        return $this->certify($data);
+    }
+
+    /**
+     * Soumettre le bordereau d'achat via l'API FNE (alias pour submitPurchase()).
+     *
+     * @param  array<string, mixed>|null  $data  Données optionnelles (si null, utilise les données du modèle)
+     * @return ResponseDTO
+     */
+    public function certifyPurchase(?array $data = null): ResponseDTO
+    {
+        return $this->submitPurchase($data);
+    }
+
+    /**
      * Obtenir les données du modèle au format FNE.
      *
      * @return array<string, mixed>

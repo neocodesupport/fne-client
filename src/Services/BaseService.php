@@ -112,7 +112,7 @@ abstract class BaseService
      * Priorité :
      * 1. Données fournies explicitement (paramètre)
      * 2. Données du contexte (setData())
-     * 3. Données depuis le modèle (setModel()) - SEULEMENT si mapping vide
+     * 3. Données depuis le modèle (setModel()) - TOUJOURS utilisé si disponible
      * 4. Données depuis le mapper (getData()) - si le mapper supporte
      *
      * @param  array<string, mixed>|null  $explicitData  Données fournies explicitement
@@ -131,15 +131,10 @@ abstract class BaseService
             return $this->contextData;
         }
 
-        // 3. Données depuis le modèle (seulement si mapping vide)
+        // 3. Données depuis le modèle (TOUJOURS utilisé si disponible)
+        // Le mapper appliquera le mapping personnalisé si configuré
         if ($this->contextModel !== null) {
-            // Vérifier si le mapper a un mapping configuré
-            $hasMapping = $this->mapper && method_exists($this->mapper, 'hasMapping') && $this->mapper->hasMapping();
-
-            // Si pas de mapping, utiliser directement les données du modèle
-            if (!$hasMapping) {
-                return $this->extractModelData($this->contextModel);
-            }
+            return $this->extractModelData($this->contextModel);
         }
 
         // 4. Données depuis le mapper (si supporte getData())

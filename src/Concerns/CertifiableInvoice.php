@@ -19,16 +19,20 @@ trait CertifiableInvoice
      */
     public function certify(?array $data = null): ResponseDTO
     {
-        // Récupérer les données du modèle si aucune donnée n'est fournie
-        if ($data === null) {
-            $data = $this->getFneData();
-        }
-
         // Obtenir le client FNE
         $fneClient = $this->getFneClient();
+        $invoiceService = $fneClient->invoice();
 
-        // Certifier la facture
-        return $fneClient->invoice()->sign($data);
+        // Si aucune donnée n'est fournie, utiliser le modèle directement
+        if ($data === null) {
+            // Passer le modèle au service pour qu'il puisse extraire les données
+            $invoiceService->setModel($this);
+            // Appeler sign() sans paramètre pour utiliser les données du modèle
+            return $invoiceService->sign();
+        }
+
+        // Si des données sont fournies, les utiliser directement
+        return $invoiceService->sign($data);
     }
 
     /**
