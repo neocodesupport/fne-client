@@ -48,13 +48,24 @@ class FNEServiceProvider extends ServiceProvider
         // Enregistrer le Cache (optionnel)
         $this->app->singleton(CacheInterface::class, function ($app) {
             $config = $app->make(FNEConfig::class);
+            
+            // Si le cache est désactivé, retourner un ArrayCache vide (ne sera pas utilisé)
             if (!$config->isCacheEnabled()) {
-                // Retourner null si le cache est désactivé
-                // Note: on ne peut pas retourner null pour un singleton, donc on retourne un ArrayCache vide
                 return new \Neocode\FNE\Cache\ArrayCache();
             }
 
-            return CacheFactory::create();
+            // Essayer de créer un cache Laravel si disponible
+            try {
+                if (function_exists('app') && app()->bound(\Illuminate\Contracts\Cache\Repository::class)) {
+                    $laravelCache = app()->make(\Illuminate\Contracts\Cache\Repository::class);
+                    return \Neocode\FNE\Cache\CacheFactory::createLaravelCacheWithInstance($laravelCache);
+                }
+            } catch (\Throwable $e) {
+                // Si on ne peut pas obtenir le cache Laravel, utiliser ArrayCache
+            }
+
+            // Fallback vers ArrayCache
+            return CacheFactory::createArrayCache();
         });
 
         // Enregistrer le Logger (optionnel, utilise le logger Laravel si disponible)
