@@ -2,11 +2,11 @@
 
 namespace Neocode\FNE\Commands\Symfony;
 
-use Laravel\Prompts\Text;
-use Laravel\Prompts\Select;
-use Laravel\Prompts\Confirm;
-use Laravel\Prompts\Note;
-use Laravel\Prompts\Error;
+use function Laravel\Prompts\text;
+use function Laravel\Prompts\select;
+use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\note;
+use function Laravel\Prompts\error;
 use Neocode\FNE\Install\FrameworkDetector;
 use Neocode\FNE\Install\FrameworkType;
 use Symfony\Component\Console\Command\Command;
@@ -49,28 +49,28 @@ class InstallCommand extends Command
         $framework = $detector->detect();
 
         if ($framework !== FrameworkType::SYMFONY) {
-            Error::display("⚠️  Cette commande est uniquement pour Symfony.");
-            Error::display("Framework détecté : {$framework->getDescription()}");
-            Error::display("Utilisez la commande appropriée : {$framework->getInstallCommand()}");
+            error("⚠️  Cette commande est uniquement pour Symfony.");
+            error("Framework détecté : {$framework->getDescription()}");
+            error("Utilisez la commande appropriée : {$framework->getInstallCommand()}");
             return Command::FAILURE;
         }
 
         $output->writeln('');
-        Note::display('🚀 Installation du package FNE Client', 'Symfony');
+        note('🚀 Installation du package FNE Client', 'Symfony');
         $output->writeln('');
 
         // 1. Configuration de l'API
         $output->writeln("Configuration de l'API FNE");
         $output->writeln(str_repeat('─', 50));
 
-        $apiKey = Text::make(
+        $apiKey = text(
             label: 'Clé API FNE',
             placeholder: 'Entrez votre clé API',
             required: true,
             validate: fn($value) => empty(trim($value)) ? 'La clé API est requise' : null
         );
 
-        $baseUrlChoice = Select::make(
+        $baseUrlChoice = select(
             label: 'URL de l\'API FNE',
             options: [
                 'test' => 'Test : http://54.247.95.108/ws',
@@ -82,7 +82,7 @@ class InstallCommand extends Command
 
         $customUrl = null;
         if ($baseUrlChoice === 'custom') {
-            $customUrl = Text::make(
+            $customUrl = text(
                 label: 'URL personnalisée',
                 placeholder: 'https://api.fne.example.com/ws',
                 required: true,
@@ -101,21 +101,21 @@ class InstallCommand extends Command
 
         // 2. Configuration du cache
         $output->writeln('');
-        $useCache = Confirm::make(
+        $useCache = confirm(
             label: 'Activer le cache ?',
             default: true
         );
 
         // 3. Configuration des migrations
         $output->writeln('');
-        $publishMigrations = Confirm::make(
+        $publishMigrations = confirm(
             label: 'Installer les migrations SQL pour la table fne_certifications ?',
             default: true
         );
 
         // 4. Génération de la configuration
         $output->writeln('');
-        Note::display('📝 Génération de la configuration...');
+        note('📝 Génération de la configuration...');
 
         // Configuration pour config/packages/fne.yaml
         $this->generateConfigYaml($apiKey, $baseUrl, $mode, $useCache);
@@ -126,13 +126,13 @@ class InstallCommand extends Command
         // 5. Installation des migrations
         if ($publishMigrations) {
             $output->writeln('');
-            Note::display('📝 Installation des migrations SQL...');
+            note('📝 Installation des migrations SQL...');
             $this->installMigrations($output);
         }
 
         // 6. Résumé
         $output->writeln('');
-        Note::display('✅ Installation terminée avec succès !', type: 'success');
+        note('✅ Installation terminée avec succès !');
         $output->writeln('');
         $output->writeln('📚 Documentation : https://docs.neocode.com/fne-client');
         $output->writeln('');
@@ -208,7 +208,7 @@ class InstallCommand extends Command
         $yamlContent = "# Configuration FNE Client\n# Ce fichier a été généré automatiquement par le script d'installation.\n\n" . $yamlContent;
 
         file_put_contents($configPath, $yamlContent);
-        Note::display("✅ Configuration créée dans : {$configPath}");
+        note("✅ Configuration créée dans : {$configPath}");
     }
 
     /**
@@ -225,7 +225,7 @@ class InstallCommand extends Command
         $envPath = getcwd() . '/.env';
 
         if (!file_exists($envPath)) {
-            Note::display("⚠️  Fichier .env introuvable. Créez-le manuellement avec les variables suivantes :");
+            note("⚠️  Fichier .env introuvable. Créez-le manuellement avec les variables suivantes :");
             echo "FNE_API_KEY={$apiKey}\n";
             echo "FNE_BASE_URL={$baseUrl}\n";
             echo "FNE_MODE={$mode}\n";
@@ -251,7 +251,7 @@ class InstallCommand extends Command
         }
 
         file_put_contents($envPath, $envContent);
-        Note::display("✅ Fichier .env mis à jour");
+        note("✅ Fichier .env mis à jour");
     }
 
     /**
@@ -269,24 +269,24 @@ class InstallCommand extends Command
         // Créer le dossier database/migrations s'il n'existe pas
         if (!is_dir($targetDir)) {
             if (!mkdir($targetDir, 0755, true)) {
-                Error::display("❌ Impossible de créer le dossier : {$targetDir}");
+                error("❌ Impossible de créer le dossier : {$targetDir}");
                 return;
             }
         }
 
         // Copier le fichier SQL
         if (!file_exists($sqlFile)) {
-            Error::display("❌ Fichier de migration introuvable : {$sqlFile}");
+            error("❌ Fichier de migration introuvable : {$sqlFile}");
             return;
         }
 
         if (copy($sqlFile, $targetPath) === false) {
-            Error::display("❌ Impossible de copier le fichier de migration vers : {$targetPath}");
+                error("❌ Impossible de copier le fichier de migration vers : {$targetPath}");
             return;
         }
 
-        Note::display("✅ Migration SQL copiée dans : {$targetPath}");
-        Note::display("💡 Exécutez cette migration dans votre base de données pour créer la table fne_certifications.");
+        note("✅ Migration SQL copiée dans : {$targetPath}");
+        note("💡 Exécutez cette migration dans votre base de données pour créer la table fne_certifications.");
     }
 
     /**

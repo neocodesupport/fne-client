@@ -39,7 +39,8 @@ class InstallCommand extends Command
         $this->newLine();
 
         // Détecter le framework (devrait être Laravel)
-        $framework = FrameworkDetector::detect();
+        $detector = new FrameworkDetector();
+        $framework = $detector->detect();
         if ($framework !== FrameworkType::LARAVEL) {
             $this->error('Cette commande est uniquement disponible pour Laravel.');
             return Command::FAILURE;

@@ -47,12 +47,12 @@ class InvoiceService extends BaseService
     /**
      * Certifier une facture de vente.
      *
-     * @param  array<string, mixed>  $data  Données de la facture
+     * @param  array<string, mixed>|null  $data  Données de la facture (optionnel, peut être récupéré via getData())
      * @return ResponseDTO
      */
-    public function sign(array $data): ResponseDTO
+    public function sign(?array $data = null): ResponseDTO
     {
-        $this->log('info', 'Signing invoice', ['data' => $data]);
+        $this->log('info', 'Signing invoice', ['data' => $data ?? 'from context']);
 
         $result = $this->execute($data);
 

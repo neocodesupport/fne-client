@@ -66,12 +66,12 @@ class PurchaseService extends BaseService
     /**
      * Soumettre un bordereau d'achat.
      *
-     * @param  array<string, mixed>  $data  Données du bordereau
+     * @param  array<string, mixed>|null  $data  Données du bordereau (optionnel, peut être récupéré via getData())
      * @return ResponseDTO
      */
-    public function submit(array $data): ResponseDTO
+    public function submit(?array $data = null): ResponseDTO
     {
-        $this->log('info', 'Submitting purchase invoice', ['data' => $data]);
+        $this->log('info', 'Submitting purchase invoice', ['data' => $data ?? 'from context']);
 
         $result = $this->execute($data);
 

@@ -27,6 +27,16 @@ abstract class BaseMapper implements MapperInterface
     }
 
     /**
+     * Vérifier si un mapping personnalisé est configuré.
+     *
+     * @return bool
+     */
+    public function hasMapping(): bool
+    {
+        return !empty($this->customMapping);
+    }
+
+    /**
      * Transformer les données ERP vers le format FNE.
      *
      * @param  array<string, mixed>  $data  Données ERP

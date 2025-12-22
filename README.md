@@ -285,6 +285,102 @@ $refund = FNE::refund()->issue($invoiceId, [
 ]);
 ```
 
+### Traits pour Modèles
+
+Le package fournit des traits pour intégrer facilement la certification FNE dans vos modèles.
+
+#### CertifiableInvoice - Factures de Vente
+
+```php
+use Neocode\FNE\Concerns\CertifiableInvoice;
+use Illuminate\Database\Eloquent\Model;
+
+class Invoice extends Model
+{
+    use CertifiableInvoice;
+
+    // Vos attributs...
+}
+
+// Utilisation
+$invoice = Invoice::find(1);
+$response = $invoice->certify(); // Certifie automatiquement avec les données du modèle
+
+// Ou avec des données personnalisées
+$response = $invoice->certify([
+    'invoiceType' => InvoiceType::SALE->value,
+    'items' => [...],
+]);
+```
+
+#### CertifiablePurchase - Bordereaux d'Achat
+
+```php
+use Neocode\FNE\Concerns\CertifiablePurchase;
+use Illuminate\Database\Eloquent\Model;
+
+class Purchase extends Model
+{
+    use CertifiablePurchase;
+
+    // Vos attributs...
+}
+
+// Utilisation
+$purchase = Purchase::find(1);
+$response = $purchase->submit(); // Soumet automatiquement avec les données du modèle
+```
+
+#### CertifiableRefund - Avoirs
+
+```php
+use Neocode\FNE\Concerns\CertifiableRefund;
+use Illuminate\Database\Eloquent\Model;
+
+class Invoice extends Model
+{
+    use CertifiableRefund;
+
+    // Le modèle doit avoir un attribut fne_id ou fne_invoice_id
+    protected $fillable = ['fne_id', ...];
+}
+
+// Utilisation
+$invoice = Invoice::find(1); // Facture déjà certifiée avec fne_id
+$response = $invoice->issueRefund([
+    [
+        'id' => 'uuid-de-l-item', // UUID de l'item à rembourser
+        'quantity' => 1.0,
+    ],
+]);
+```
+
+#### Certifiable - Trait Combiné
+
+Pour les modèles qui peuvent être factures ET bordereaux :
+
+```php
+use Neocode\FNE\Concerns\Certifiable;
+use Illuminate\Database\Eloquent\Model;
+
+class Document extends Model
+{
+    use Certifiable;
+
+    // Méthodes disponibles :
+    // - certify() : Certifier comme facture
+    // - submitPurchase() : Soumettre comme bordereau
+    // - issueRefund() : Émettre un avoir
+}
+
+// Utilisation
+$document = Document::find(1);
+$response = $document->certify(); // Facture
+$response = $document->submitPurchase(); // Bordereau
+```
+
+**Note** : Les traits détectent automatiquement le framework (Laravel, Symfony, PHP natif) et utilisent le service container approprié.
+
 ### Enums Disponibles
 
 #### InvoiceTemplate

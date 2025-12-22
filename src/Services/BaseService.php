@@ -47,6 +47,16 @@ abstract class BaseService
     protected ?ValidatorInterface $validator;
 
     /**
+     * Données du contexte (pour récupération via getData())
+     */
+    protected ?array $contextData = null;
+
+    /**
+     * Modèle associé (pour récupération via getData())
+     */
+    protected mixed $contextModel = null;
+
+    /**
      * Create a new BaseService instance.
      *
      * @param  HttpClientInterface  $httpClient
@@ -73,13 +83,122 @@ abstract class BaseService
     }
 
     /**
+     * Définir les données du contexte (pour utilisation avec getData()).
+     *
+     * @param  array<string, mixed>  $data
+     * @return $this
+     */
+    public function setData(array $data): self
+    {
+        $this->contextData = $data;
+        return $this;
+    }
+
+    /**
+     * Définir le modèle associé (pour utilisation avec getData()).
+     *
+     * @param  mixed  $model  Modèle (doit avoir toArray() ou attributesToArray())
+     * @return $this
+     */
+    public function setModel(mixed $model): self
+    {
+        $this->contextModel = $model;
+        return $this;
+    }
+
+    /**
+     * Obtenir les données depuis différentes sources (priorité).
+     *
+     * Priorité :
+     * 1. Données fournies explicitement (paramètre)
+     * 2. Données du contexte (setData())
+     * 3. Données depuis le modèle (setModel()) - SEULEMENT si mapping vide
+     * 4. Données depuis le mapper (getData()) - si le mapper supporte
+     *
+     * @param  array<string, mixed>|null  $explicitData  Données fournies explicitement
+     * @return array<string, mixed>
+     * @throws \Neocode\FNE\Exceptions\BadRequestException Si aucune donnée disponible
+     */
+    protected function getData(?array $explicitData = null): array
+    {
+        // 1. Données fournies explicitement
+        if ($explicitData !== null && !empty($explicitData)) {
+            return $explicitData;
+        }
+
+        // 2. Données du contexte
+        if ($this->contextData !== null && !empty($this->contextData)) {
+            return $this->contextData;
+        }
+
+        // 3. Données depuis le modèle (seulement si mapping vide)
+        if ($this->contextModel !== null) {
+            // Vérifier si le mapper a un mapping configuré
+            $hasMapping = $this->mapper && method_exists($this->mapper, 'hasMapping') && $this->mapper->hasMapping();
+
+            // Si pas de mapping, utiliser directement les données du modèle
+            if (!$hasMapping) {
+                return $this->extractModelData($this->contextModel);
+            }
+        }
+
+        // 4. Données depuis le mapper (si supporte getData())
+        if ($this->mapper && method_exists($this->mapper, 'getData')) {
+            $mapperData = $this->mapper->getData();
+            if ($mapperData !== null && !empty($mapperData)) {
+                return $mapperData;
+            }
+        }
+
+        // Aucune donnée disponible
+        throw new \Neocode\FNE\Exceptions\BadRequestException(
+            'Aucune donnée disponible. Fournissez des données via le paramètre, setData() ou setModel().'
+        );
+    }
+
+    /**
+     * Extraire les données d'un modèle.
+     *
+     * @param  mixed  $model
+     * @return array<string, mixed>
+     */
+    protected function extractModelData(mixed $model): array
+    {
+        // Essayer toArray() si disponible (Laravel Eloquent)
+        if (method_exists($model, 'toArray')) {
+            return $model->toArray();
+        }
+
+        // Essayer attributesToArray() si disponible (Laravel Eloquent)
+        if (method_exists($model, 'attributesToArray')) {
+            return $model->attributesToArray();
+        }
+
+        // Essayer getAttributes() si disponible
+        if (method_exists($model, 'getAttributes')) {
+            return $model->getAttributes();
+        }
+
+        // Essayer __toArray() si disponible
+        if (method_exists($model, '__toArray')) {
+            return $model->__toArray();
+        }
+
+        // Fallback : convertir en array
+        return (array) $model;
+    }
+
+    /**
      * Exécuter le service (orchestration complète).
      *
-     * @param  array<string, mixed>  $data  Données d'entrée
+     * @param  array<string, mixed>|null  $data  Données d'entrée (optionnel, peut être récupéré via getData())
      * @return mixed  Résultat du service
      */
-    public function execute(array $data): mixed
+    public function execute(?array $data = null): mixed
     {
+        // Récupérer les données (avec priorité)
+        $data = $this->getData($data);
+
         // 1. Validation pré-mapping (sur les données d'entrée)
         // Note: Certaines validations doivent se faire sur les données d'entrée
         // (ex: vérifier qu'il n'y a pas de taxes dans les achats)

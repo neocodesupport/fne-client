@@ -12,11 +12,11 @@
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use Laravel\Prompts\Text;
-use Laravel\Prompts\Select;
-use Laravel\Prompts\Confirm;
-use Laravel\Prompts\Note;
-use Laravel\Prompts\Error;
+use function Laravel\Prompts\text;
+use function Laravel\Prompts\select;
+use function Laravel\Prompts\confirm;
+use function Laravel\Prompts\note;
+use function Laravel\Prompts\error;
 use Neocode\FNE\Install\FrameworkDetector;
 use Neocode\FNE\Install\FrameworkType;
 
@@ -25,28 +25,28 @@ $detector = new FrameworkDetector();
 $framework = $detector->detect();
 
 if ($framework !== FrameworkType::PHP) {
-    Error::display("⚠️  Ce script est uniquement pour les projets PHP natif.");
-    Error::display("Framework détecté : {$framework->getDescription()}");
-    Error::display("Utilisez la commande appropriée : {$framework->getInstallCommand()}");
+    error("⚠️  Ce script est uniquement pour les projets PHP natif.");
+    error("Framework détecté : {$framework->getDescription()}");
+    error("Utilisez la commande appropriée : {$framework->getInstallCommand()}");
     exit(1);
 }
 
 echo PHP_EOL;
-Note::display('🚀 Installation du package FNE Client', 'PHP natif');
+note('🚀 Installation du package FNE Client', 'PHP natif');
 echo PHP_EOL;
 
 // 1. Configuration de l'API
 echo "Configuration de l'API FNE" . PHP_EOL;
 echo str_repeat('─', 50) . PHP_EOL;
 
-$apiKey = Text::make(
+$apiKey = text(
     label: 'Clé API FNE',
     placeholder: 'Entrez votre clé API',
     required: true,
     validate: fn($value) => empty(trim($value)) ? 'La clé API est requise' : null
 );
 
-$baseUrlChoice = Select::make(
+$baseUrlChoice = select(
     label: 'URL de l\'API FNE',
     options: [
         'test' => 'Test : http://54.247.95.108/ws',
@@ -58,7 +58,7 @@ $baseUrlChoice = Select::make(
 
 $customUrl = null;
 if ($baseUrlChoice === 'custom') {
-    $customUrl = Text::make(
+    $customUrl = text(
         label: 'URL personnalisée',
         placeholder: 'https://api.fne.example.com/ws',
         required: true,
@@ -77,21 +77,21 @@ $mode = $baseUrlChoice === 'production' ? 'production' : 'test';
 
 // 2. Configuration du cache
 echo PHP_EOL;
-$useCache = Confirm::make(
+$useCache = confirm(
     label: 'Activer le cache ?',
     default: true
 );
 
 // 3. Configuration des migrations
 echo PHP_EOL;
-$publishMigrations = Confirm::make(
+$publishMigrations = confirm(
     label: 'Installer les migrations SQL pour la table fne_certifications ?',
     default: true
 );
 
 // 4. Génération du fichier de configuration
 echo PHP_EOL;
-Note::display('📝 Génération de la configuration...');
+note('📝 Génération de la configuration...');
 
 $config = [
     'api_key' => $apiKey,
@@ -119,16 +119,16 @@ $configPath = getcwd() . '/fne.php';
 $configContent = "<?php\n\n/**\n * Configuration FNE Client\n *\n * Ce fichier a été généré automatiquement par le script d'installation.\n * Vous pouvez le modifier selon vos besoins.\n */\n\nreturn " . var_export($config, true) . ";\n";
 
 if (file_put_contents($configPath, $configContent) === false) {
-    Error::display("❌ Impossible d'écrire le fichier de configuration : {$configPath}");
+    error("❌ Impossible d'écrire le fichier de configuration : {$configPath}");
     exit(1);
 }
 
-Note::display("✅ Configuration créée dans : {$configPath}");
+note("✅ Configuration créée dans : {$configPath}");
 
 // 5. Installation des migrations SQL
 if ($publishMigrations) {
     echo PHP_EOL;
-    Note::display('📝 Installation des migrations SQL...');
+    note('📝 Installation des migrations SQL...');
 
     $sqlFile = __DIR__ . '/../database/migrations/fne_certifications.sql';
     $targetDir = getcwd() . '/database';
@@ -137,29 +137,29 @@ if ($publishMigrations) {
     // Créer le dossier database s'il n'existe pas
     if (!is_dir($targetDir)) {
         if (!mkdir($targetDir, 0755, true)) {
-            Error::display("❌ Impossible de créer le dossier : {$targetDir}");
+            error("❌ Impossible de créer le dossier : {$targetDir}");
             exit(1);
         }
     }
 
     // Copier le fichier SQL
     if (!file_exists($sqlFile)) {
-        Error::display("❌ Fichier de migration introuvable : {$sqlFile}");
+        error("❌ Fichier de migration introuvable : {$sqlFile}");
         exit(1);
     }
 
     if (copy($sqlFile, $targetPath) === false) {
-        Error::display("❌ Impossible de copier le fichier de migration vers : {$targetPath}");
+            error("❌ Impossible de copier le fichier de migration vers : {$targetPath}");
         exit(1);
     }
 
-    Note::display("✅ Migration SQL copiée dans : {$targetPath}");
-    Note::display("💡 Exécutez cette migration dans votre base de données pour créer la table fne_certifications.");
+    note("✅ Migration SQL copiée dans : {$targetPath}");
+    note("💡 Exécutez cette migration dans votre base de données pour créer la table fne_certifications.");
 }
 
 // 6. Résumé de l'installation
 echo PHP_EOL;
-Note::display('✅ Installation terminée avec succès !', type: 'success');
+note('✅ Installation terminée avec succès !');
 echo PHP_EOL;
 
 echo "📚 Documentation : https://docs.neocode.com/fne-client" . PHP_EOL;
