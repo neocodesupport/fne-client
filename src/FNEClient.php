@@ -2,6 +2,7 @@
 
 namespace Neocode\FNE;
 
+use Neocode\FNE\Cache\CacheFactory;
 use Neocode\FNE\Config\FNEConfig;
 use Neocode\FNE\Contracts\CacheInterface;
 use Neocode\FNE\Contracts\HttpClientInterface;
@@ -57,7 +58,14 @@ class FNEClient
     ) {
         $this->httpClient = $httpClient;
         $this->config = $config;
-        $this->cache = $cache;
+
+        // Utiliser CacheFactory si aucun cache n'est fourni et que le cache est activé
+        if ($cache === null && $config->isCacheEnabled()) {
+            $this->cache = CacheFactory::create();
+        } else {
+            $this->cache = $cache;
+        }
+
         $this->logger = $logger;
 
         // Valider la configuration
