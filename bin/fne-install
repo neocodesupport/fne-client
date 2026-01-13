@@ -13,7 +13,6 @@
 require __DIR__ . '/../vendor/autoload.php';
 
 use function Laravel\Prompts\text;
-use function Laravel\Prompts\select;
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\note;
 use function Laravel\Prompts\error;
