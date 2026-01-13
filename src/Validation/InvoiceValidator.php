@@ -72,8 +72,12 @@ class InvoiceValidator extends BaseValidator
 
         // Validation conditionnelle : foreignCurrencyRate requis si foreignCurrency fourni
         $foreignCurrency = $data['foreignCurrency'] ?? '';
-        if (!empty($foreignCurrency) && (!isset($data['foreignCurrencyRate']) || $data['foreignCurrencyRate'] === '')) {
-            $errors['foreignCurrencyRate'] = ['The foreign currency rate field is required when foreign currency is provided.'];
+        if (!empty($foreignCurrency)) {
+            // Vérifier que foreignCurrencyRate est fourni ET > 0
+            $rate = $data['foreignCurrencyRate'] ?? null;
+            if ($rate === null || $rate === '' || (is_numeric($rate) && (float) $rate <= 0)) {
+                $errors['foreignCurrencyRate'] = ['The foreign currency rate field is required and must be greater than 0 when foreign currency is provided.'];
+            }
         }
 
         // Validation conditionnelle : taxes requises pour factures de vente
