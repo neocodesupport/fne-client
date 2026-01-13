@@ -3,6 +3,7 @@
 namespace Neocode\FNE\Concerns;
 
 use Neocode\FNE\DTOs\ResponseDTO;
+use Neocode\FNE\Storage\CertificationStorage;
 
 /**
  * Trait pour les modèles de factures de vente certifiables
@@ -75,6 +76,7 @@ trait CertifiableInvoice
 
     /**
      * Enregistrer la certification dans la table fne_certifications.
+     * Compatible Laravel (Eloquent) et Symfony (Doctrine/SQL natif).
      *
      * @param  ResponseDTO  $response
      * @param  array<string, mixed>  $invoiceData  Données de la facture originale
@@ -82,86 +84,8 @@ trait CertifiableInvoice
      */
     protected function saveToCertificationsTable(ResponseDTO $response, array $invoiceData): void
     {
-        // Vérifier si le modèle existe
-        if (!class_exists(\Neocode\FNE\Models\FNECertification::class)) {
-            return;
-        }
-
-        // Vérifier si on est dans Laravel et si la table existe
-        if (!function_exists('app') || !app()->bound('db')) {
-            return;
-        }
-
-        try {
-            // Vérifier si la table existe
-            if (!\Illuminate\Support\Facades\Schema::hasTable('fne_certifications')) {
-                // Logger un message informatif mais ne pas faire échouer
-                if (app()->bound(\Psr\Log\LoggerInterface::class)) {
-                    app(\Psr\Log\LoggerInterface::class)->info('FNE certifications table does not exist. Run migration: php artisan migrate', [
-                        'reference' => $response->reference ?? null,
-                    ]);
-                }
-                return;
-            }
-        } catch (\Throwable $e) {
-            // Si on ne peut pas vérifier l'existence de la table, on abandonne silencieusement
-            return;
-        }
-
-        try {
-            $invoice = $response->invoice;
-
-            // Utiliser les montants directement depuis la réponse (déjà en centimes)
-            $amount = $invoice ? $invoice->amount : 0;
-            $vatAmount = $invoice ? $invoice->vatAmount : 0;
-            $fiscalStamp = $invoice ? $invoice->fiscalStamp : 0;
-
-            // Créer l'enregistrement
-            \Neocode\FNE\Models\FNECertification::create([
-                'fne_invoice_id' => $invoice->id ?? null,
-                'reference' => $response->reference,
-                'ncc' => $response->ncc,
-                'token' => $response->token,
-                'type' => 'invoice',
-                'subtype' => 'normal',
-                'status' => $invoice->status ?? 'pending',
-                'template' => $invoiceData['template'] ?? 'B2C',
-                'client_company_name' => $invoiceData['clientCompanyName'] ?? null,
-                'client_ncc' => $invoiceData['clientNcc'] ?? null,
-                'client_phone' => $invoiceData['clientPhone'] ?? null,
-                'client_email' => $invoiceData['clientEmail'] ?? null,
-                'amount' => $amount, // Déjà en centimes depuis la réponse API
-                'vat_amount' => $vatAmount, // Déjà en centimes depuis la réponse API
-                'fiscal_stamp' => $fiscalStamp, // Déjà en centimes depuis la réponse API
-                'discount' => $invoiceData['discount'] ?? 0,
-                'is_rne' => $invoiceData['isRne'] ?? false,
-                'rne' => $invoiceData['rne'] ?? null,
-                'source' => 'api',
-                'warning' => $response->warning,
-                'balance_sticker' => $response->balanceSticker,
-                'fne_date' => $invoice->date ?? now(),
-            ]);
-        } catch (\Illuminate\Database\QueryException $e) {
-            // Erreur SQL (table n'existe pas, colonne manquante, etc.)
-            // Logger l'erreur mais ne pas faire échouer la certification
-            if (app()->bound(\Psr\Log\LoggerInterface::class)) {
-                app(\Psr\Log\LoggerInterface::class)->warning('Failed to save FNE certification to table (database error)', [
-                    'error' => $e->getMessage(),
-                    'sql_state' => $e->getCode(),
-                    'reference' => $response->reference ?? null,
-                    'hint' => 'Make sure the fne_certifications table exists. Run: php artisan migrate',
-                ]);
-            }
-        } catch (\Throwable $e) {
-            // Autres erreurs (validation, etc.)
-            // Logger l'erreur mais ne pas faire échouer la certification
-            if (app()->bound(\Psr\Log\LoggerInterface::class)) {
-                app(\Psr\Log\LoggerInterface::class)->warning('Failed to save FNE certification to table', [
-                    'error' => $e->getMessage(),
-                    'reference' => $response->reference ?? null,
-                ]);
-            }
-        }
+        // Utiliser la classe Storage qui gère la compatibilité multi-framework
+        CertificationStorage::save($response, $invoiceData);
     }
 
     /**
