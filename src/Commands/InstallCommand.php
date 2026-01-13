@@ -62,7 +62,16 @@ class InstallCommand extends Command
             return Command::FAILURE;
         }
 
-        $mode = ($baseUrl === 'http://54.247.95.108/ws') ? 'test' : 'production';
+        $modeChoice = $this->choice(
+            'Mode d\'environnement',
+            [
+                'test' => 'Test',
+                'production' => 'Production',
+            ],
+            ($baseUrl === 'http://54.247.95.108/ws') ? 'test' : 'production'
+        );
+
+        $mode = $modeChoice;
 
         // 2. Configuration du cache
         $useCache = $this->confirm('Activer le cache ?', true);

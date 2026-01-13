@@ -3,6 +3,7 @@
 namespace Neocode\FNE\Commands\Symfony;
 
 use function Laravel\Prompts\text;
+use function Laravel\Prompts\select;
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\note;
 use function Laravel\Prompts\error;
@@ -77,7 +78,14 @@ class InstallCommand extends Command
             validate: fn($value) => empty(trim($value)) ? 'L\'URL est requise' : null
         );
 
-        $mode = ($baseUrl === 'http://54.247.95.108/ws') ? 'test' : 'production';
+        $mode = select(
+            label: 'Mode d\'environnement',
+            options: [
+                'test' => 'Test',
+                'production' => 'Production',
+            ],
+            default: ($baseUrl === 'http://54.247.95.108/ws') ? 'test' : 'production'
+        );
 
         // 2. Configuration du cache
         $output->writeln('');
