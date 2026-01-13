@@ -79,10 +79,14 @@ class InvoiceValidator extends BaseValidator
         // Validation conditionnelle : taxes requises pour factures de vente
         $invoiceType = $data['invoiceType'] ?? '';
         if ($invoiceType === InvoiceType::SALE->value) {
-            if (empty($data['items'] ?? [])) {
-                $errors['items'] = ['Items are required for sale invoices.'];
+            $items = $data['items'] ?? [];
+            if (empty($items)) {
+                $errors['items'] = [
+                    'Items are required for sale invoices.',
+                    'Hint: Make sure to load the items relation before certifying: $invoice->load(\'items\');',
+                ];
             } else {
-                foreach ($data['items'] as $index => $item) {
+                foreach ($items as $index => $item) {
                     if (empty($item['taxes'] ?? [])) {
                         $errors["items.{$index}.taxes"] = ['Taxes are required for sale invoice items.'];
                     }

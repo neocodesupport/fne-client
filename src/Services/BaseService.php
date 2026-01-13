@@ -159,6 +159,14 @@ abstract class BaseService
      */
     protected function extractModelData(mixed $model): array
     {
+        // Détecter si c'est un modèle Laravel Eloquent
+        $isLaravelModel = $this->isLaravelModel($model);
+
+        // Si c'est un modèle Laravel, charger automatiquement les relations communes
+        if ($isLaravelModel) {
+            $this->loadLaravelRelations($model);
+        }
+
         // Essayer toArray() si disponible (Laravel Eloquent)
         // Cette méthode inclut automatiquement les relations chargées
         if (method_exists($model, 'toArray')) {
@@ -198,6 +206,78 @@ abstract class BaseService
 
         // Fallback : convertir en array
         return (array) $model;
+    }
+
+    /**
+     * Vérifier si c'est un modèle Laravel Eloquent.
+     *
+     * @param  mixed  $model
+     * @return bool
+     */
+    protected function isLaravelModel(mixed $model): bool
+    {
+        // Vérifier si c'est une instance d'Illuminate\Database\Eloquent\Model
+        if (is_object($model)) {
+            $className = get_class($model);
+            return str_starts_with($className, 'Illuminate\\Database\\Eloquent\\')
+                || is_subclass_of($className, 'Illuminate\\Database\\Eloquent\\Model');
+        }
+
+        return false;
+    }
+
+    /**
+     * Charger automatiquement les relations Laravel communes si elles existent.
+     *
+     * @param  mixed  $model
+     * @return void
+     */
+    protected function loadLaravelRelations(mixed $model): void
+    {
+        if (!is_object($model)) {
+            return;
+        }
+
+        // Vérifier si le modèle a la méthode load() (Laravel Eloquent)
+        if (!method_exists($model, 'load')) {
+            return;
+        }
+
+        // Liste des relations communes à charger automatiquement
+        $commonRelations = ['items', 'lineItems', 'invoiceItems', 'purchaseItems', 'refundItems'];
+
+        foreach ($commonRelations as $relation) {
+            // Vérifier si la relation existe dans le modèle
+            if (method_exists($model, $relation)) {
+                // Vérifier si la relation n'est pas déjà chargée (si la méthode existe)
+                $isLoaded = false;
+                if (method_exists($model, 'relationLoaded')) {
+                    $isLoaded = $model->relationLoaded($relation);
+                } else {
+                    // Fallback : vérifier si la relation est dans les relations chargées
+                    // En accédant à la propriété protected via reflection
+                    try {
+                        $reflection = new \ReflectionClass($model);
+                        $relationsProperty = $reflection->getProperty('relations');
+                        $relationsProperty->setAccessible(true);
+                        $relations = $relationsProperty->getValue($model);
+                        $isLoaded = isset($relations[$relation]);
+                    } catch (\Throwable $e) {
+                        // Si on ne peut pas vérifier, on essaie quand même de charger
+                    }
+                }
+
+                if (!$isLoaded) {
+                    try {
+                        // Charger la relation
+                        $model->load($relation);
+                    } catch (\Throwable $e) {
+                        // Ignorer les erreurs si la relation n'existe pas ou n'est pas définie
+                        // Cela peut arriver si le modèle n'a pas cette relation
+                    }
+                }
+            }
+        }
     }
 
     /**
