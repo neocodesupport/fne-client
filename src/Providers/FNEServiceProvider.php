@@ -101,9 +101,9 @@ class FNEServiceProvider extends ServiceProvider
             __DIR__ . '/../../config/fne.php' => config_path('fne.php'),
         ], 'fne-config');
 
-        // Publier les migrations (optionnel)
+        // Publier les migrations (optionnel) - uniquement le fichier PHP, pas le SQL
         $this->publishes([
-            __DIR__ . '/../../database/migrations' => database_path('migrations'),
+            __DIR__ . '/../../database/migrations/2024_01_01_000000_create_fne_certifications_table.php' => database_path('migrations/2024_01_01_000000_create_fne_certifications_table.php'),
         ], 'fne-migrations');
 
         // Enregistrer les features Laravel Pennant
