@@ -63,6 +63,15 @@ class InstallCommand extends Command
         $output->writeln("Configuration de l'API FNE");
         $output->writeln(str_repeat('─', 50));
 
+        $mode = select(
+            label: 'Mode d\'environnement',
+            options: [
+                'test' => 'Test',
+                'production' => 'Production',
+            ],
+            default: 'test'
+        );
+
         $apiKey = text(
             label: 'Clé API FNE',
             placeholder: 'Entrez votre clé API',
@@ -70,21 +79,13 @@ class InstallCommand extends Command
             validate: fn($value) => empty(trim($value)) ? 'La clé API est requise' : null
         );
 
+        $defaultUrl = ($mode === 'test') ? 'http://54.247.95.108/ws' : '';
         $baseUrl = text(
             label: 'URL de l\'API FNE',
-            placeholder: 'http://54.247.95.108/ws',
-            default: 'http://54.247.95.108/ws',
+            placeholder: $defaultUrl ?: 'https://api.fne.example.com/ws',
+            default: $defaultUrl,
             required: true,
             validate: fn($value) => empty(trim($value)) ? 'L\'URL est requise' : null
-        );
-
-        $mode = select(
-            label: 'Mode d\'environnement',
-            options: [
-                'test' => 'Test',
-                'production' => 'Production',
-            ],
-            default: ($baseUrl === 'http://54.247.95.108/ws') ? 'test' : 'production'
         );
 
         // 2. Configuration du cache

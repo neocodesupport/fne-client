@@ -50,28 +50,29 @@ class InstallCommand extends Command
         $this->newLine();
 
         // 1. Configuration de l'API
-        $apiKey = $this->ask('Clé API FNE', env('FNE_API_KEY', ''));
-        if (empty($apiKey)) {
-            $this->error('La clé API est requise.');
-            return Command::FAILURE;
-        }
-
-        $baseUrl = $this->ask('URL de l\'API FNE', 'http://54.247.95.108/ws');
-        if (empty($baseUrl)) {
-            $this->error('L\'URL de l\'API est requise.');
-            return Command::FAILURE;
-        }
-
         $modeChoice = $this->choice(
             'Mode d\'environnement',
             [
                 'test' => 'Test',
                 'production' => 'Production',
             ],
-            ($baseUrl === 'http://54.247.95.108/ws') ? 'test' : 'production'
+            'test'
         );
 
         $mode = $modeChoice;
+
+        $apiKey = $this->ask('Clé API FNE', env('FNE_API_KEY', ''));
+        if (empty($apiKey)) {
+            $this->error('La clé API est requise.');
+            return Command::FAILURE;
+        }
+
+        $defaultUrl = ($mode === 'test') ? 'http://54.247.95.108/ws' : '';
+        $baseUrl = $this->ask('URL de l\'API FNE', $defaultUrl);
+        if (empty($baseUrl)) {
+            $this->error('L\'URL de l\'API est requise.');
+            return Command::FAILURE;
+        }
 
         // 2. Configuration du cache
         $useCache = $this->confirm('Activer le cache ?', true);
