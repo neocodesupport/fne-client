@@ -162,7 +162,7 @@ echo PHP_EOL;
 note('✅ Installation terminée avec succès !');
 echo PHP_EOL;
 
-echo "📚 Documentation : https://docs.neocode.com/fne-client" . PHP_EOL;
+echo "📚 Documentation : https://fne-client.neocode.ci/" . PHP_EOL;
 echo "💡 Exemple d'utilisation :" . PHP_EOL;
 echo "   use Neocode\\FNE\\Facades\\FNE;" . PHP_EOL;
 echo "   \$result = FNE::invoice()->sign(\$data);" . PHP_EOL;

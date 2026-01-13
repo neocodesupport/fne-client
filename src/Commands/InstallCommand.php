@@ -116,7 +116,7 @@ class InstallCommand extends Command
         $this->newLine();
         $this->info('✅ Installation terminée avec succès !');
         $this->newLine();
-        $this->info('📚 Documentation : https://docs.neocode.com/fne-client');
+        $this->info('📚 Documentation : https://fne-client.neocode.ci/');
         $this->info('💡 Exemple d\'utilisation :');
         $this->line('   use Neocode\\FNE\\Facades\\FNE;');
         $this->line('   $result = FNE::invoice()->sign($data);');
