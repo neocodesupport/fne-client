@@ -239,10 +239,11 @@ class CertificationStorage
             $stmt->executeStatement();
 
             return true;
-        } catch (\Doctrine\DBAL\Exception $e) {
-            self::logWarning('Failed to save FNE certification to table (Doctrine error)', $response, $e);
-            return false;
         } catch (\Throwable $e) {
+            // Vérifier si c'est une exception Doctrine DBAL
+            if (class_exists(\Doctrine\DBAL\Exception::class) && $e instanceof \Doctrine\DBAL\Exception) {
+                self::logWarning('Failed to save FNE certification to table (Doctrine error)', $response, $e);
+            } else {
             self::logWarning('Failed to save FNE certification to table (Symfony Doctrine)', $response, $e);
             return false;
         }
