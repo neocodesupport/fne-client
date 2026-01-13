@@ -11,6 +11,7 @@ use Neocode\FNE\Contracts\LoggerInterface;
 use Neocode\FNE\Features\FNEFeatures;
 use Neocode\FNE\FNEClient;
 use Neocode\FNE\Http\HttpClientFactory;
+use Neocode\FNE\Logging\LaravelLoggerAdapter;
 
 /**
  * Service Provider Laravel pour le package FNE Client
@@ -71,7 +72,8 @@ class FNEServiceProvider extends ServiceProvider
         // Enregistrer le Logger (optionnel, utilise le logger Laravel si disponible)
         if ($this->app->bound(\Psr\Log\LoggerInterface::class)) {
             $this->app->singleton(LoggerInterface::class, function ($app) {
-                return $app->make(\Psr\Log\LoggerInterface::class);
+                $psrLogger = $app->make(\Psr\Log\LoggerInterface::class);
+                return new LaravelLoggerAdapter($psrLogger);
             });
         }
 

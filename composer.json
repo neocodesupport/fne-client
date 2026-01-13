@@ -61,10 +61,10 @@
         "analyse": "phpstan analyse",
         "format": "pint",
         "post-install-cmd": [
-            "@php -r \"if (file_exists('vendor/autoload.php')) { require 'vendor/autoload.php'; \\Neocode\\FNE\\Install\\FrameworkDetector::detectAndDisplay(); }\""
+            "@php -r \"if (file_exists(__DIR__ . '/vendor/autoload.php')) { require __DIR__ . '/vendor/autoload.php'; try { \\Neocode\\FNE\\Install\\FrameworkDetector::detectAndDisplay(); } catch (\\Throwable \$e) { /* Ignore errors during install */ } }\""
         ],
         "post-update-cmd": [
-            "@php -r \"if (file_exists('vendor/autoload.php')) { require 'vendor/autoload.php'; \\Neocode\\FNE\\Install\\FrameworkDetector::detectAndDisplay(); }\""
+            "@php -r \"if (file_exists(__DIR__ . '/vendor/autoload.php')) { require __DIR__ . '/vendor/autoload.php'; try { \\Neocode\\FNE\\Install\\FrameworkDetector::detectAndDisplay(); } catch (\\Throwable \$e) { /* Ignore errors during update */ } }\""
         ]
     },
     "extra": {
