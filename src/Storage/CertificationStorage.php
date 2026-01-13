@@ -30,8 +30,8 @@ class CertificationStorage
             return self::saveSymfony($response, $invoiceData);
         }
 
-        // PHP natif - pas de support pour l'enregistrement automatique
-        return false;
+        // PHP natif - utiliser PDO directement
+        return self::saveNativePHP($response, $invoiceData);
     }
 
     /**
@@ -321,6 +321,205 @@ class CertificationStorage
             } else {
                 self::logWarning('Failed to save FNE certification to table (PDO error)', $response, $e);
             }
+            return false;
+        }
+    }
+
+    /**
+     * Enregistrer avec PHP natif (PDO).
+     *
+     * @param  ResponseDTO  $response
+     * @param  array<string, mixed>  $invoiceData
+     * @return bool
+     */
+    protected static function saveNativePHP(ResponseDTO $response, array $invoiceData): bool
+    {
+        try {
+            // Essayer d'obtenir une connexion PDO depuis les variables d'environnement
+            $pdo = self::getNativePDOConnection();
+            if (!$pdo) {
+                return false;
+            }
+
+            $invoice = $response->invoice;
+            $amount = $invoice ? $invoice->amount : 0;
+            $vatAmount = $invoice ? $invoice->vatAmount : 0;
+            $fiscalStamp = $invoice ? $invoice->fiscalStamp : 0;
+
+            // Vérifier si la table existe (pour MySQL, PostgreSQL, SQLite)
+            if (!self::tableExistsNative($pdo, 'fne_certifications')) {
+                self::logInfo('FNE certifications table does not exist. Create it using the SQL migration file.', $response);
+                return false;
+            }
+
+            $data = [
+                'fne_invoice_id' => $invoice->id ?? null,
+                'reference' => $response->reference,
+                'ncc' => $response->ncc,
+                'token' => $response->token,
+                'type' => 'invoice',
+                'subtype' => 'normal',
+                'status' => $invoice->status ?? 'pending',
+                'template' => $invoiceData['template'] ?? 'B2C',
+                'client_company_name' => $invoiceData['clientCompanyName'] ?? null,
+                'client_ncc' => $invoiceData['clientNcc'] ?? null,
+                'client_phone' => $invoiceData['clientPhone'] ?? null,
+                'client_email' => $invoiceData['clientEmail'] ?? null,
+                'amount' => $amount,
+                'vat_amount' => $vatAmount,
+                'fiscal_stamp' => $fiscalStamp,
+                'discount' => $invoiceData['discount'] ?? 0,
+                'is_rne' => $invoiceData['isRne'] ? 1 : 0,
+                'rne' => $invoiceData['rne'] ?? null,
+                'source' => 'api',
+                'warning' => $response->warning ? 1 : 0,
+                'balance_sticker' => $response->balanceSticker,
+                'fne_date' => $invoice->date ?? date('Y-m-d H:i:s'),
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s'),
+            ];
+
+            $columns = array_keys($data);
+            $placeholders = array_map(fn($col) => ':' . $col, $columns);
+            $sql = 'INSERT INTO fne_certifications (' . implode(', ', $columns) . ') VALUES (' . implode(', ', $placeholders) . ')';
+
+            $stmt = $pdo->prepare($sql);
+            foreach ($data as $key => $value) {
+                $stmt->bindValue(':' . $key, $value);
+            }
+            $stmt->execute();
+
+            return true;
+        } catch (\PDOException $e) {
+            // Si c'est une erreur de table inexistante, logger un message informatif
+            if (str_contains($e->getMessage(), "doesn't exist") || str_contains($e->getMessage(), 'does not exist')) {
+                self::logInfo('FNE certifications table does not exist. Create it using the SQL migration file.', $response);
+            } else {
+                self::logWarning('Failed to save FNE certification to table (PDO error)', $response, $e);
+            }
+            return false;
+        } catch (\Throwable $e) {
+            self::logWarning('Failed to save FNE certification to table (PHP native)', $response, $e);
+            return false;
+        }
+    }
+
+    /**
+     * Obtenir une connexion PDO pour PHP natif.
+     *
+     * @return \PDO|null
+     */
+    protected static function getNativePDOConnection(): ?\PDO
+    {
+        // Essayer d'obtenir les informations de connexion depuis les variables d'environnement
+        $driver = $_ENV['DB_DRIVER'] ?? $_ENV['DB_CONNECTION'] ?? 'mysql';
+        $host = $_ENV['DB_HOST'] ?? 'localhost';
+        $port = $_ENV['DB_PORT'] ?? null;
+        $database = $_ENV['DB_DATABASE'] ?? $_ENV['DB_NAME'] ?? null;
+        $username = $_ENV['DB_USERNAME'] ?? $_ENV['DB_USER'] ?? 'root';
+        $password = $_ENV['DB_PASSWORD'] ?? $_ENV['DB_PASS'] ?? '';
+
+        if (!$database) {
+            return null;
+        }
+
+        try {
+            // Construire le DSN selon le driver
+            $dsn = match ($driver) {
+                'mysql' => sprintf('mysql:host=%s%s;dbname=%s;charset=utf8mb4', $host, $port ? ';port=' . $port : '', $database),
+                'pgsql', 'postgresql' => sprintf('pgsql:host=%s%s;dbname=%s', $host, $port ? ';port=' . $port : '', $database),
+                'sqlite', 'sqlite3' => sprintf('sqlite:%s', $database),
+                default => null,
+            };
+
+            if (!$dsn) {
+                return null;
+            }
+
+            $pdo = new \PDO($dsn, $username, $password, [
+                \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+                \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+            ]);
+
+            return $pdo;
+        } catch (\PDOException $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Vérifier si une table existe (PHP natif avec PDO).
+     *
+     * @param  \PDO  $pdo
+     * @param  string  $tableName
+     * @return bool
+     */
+    protected static function tableExistsNative(\PDO $pdo, string $tableName): bool
+    {
+        try {
+            $driver = $pdo->getAttribute(\PDO::ATTR_DRIVER_NAME);
+
+            return match ($driver) {
+                'mysql' => self::tableExistsMySQL($pdo, $tableName),
+                'pgsql' => self::tableExistsPostgreSQL($pdo, $tableName),
+                'sqlite' => self::tableExistsSQLite($pdo, $tableName),
+                default => false,
+            };
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Vérifier si une table existe (MySQL).
+     *
+     * @param  \PDO  $pdo
+     * @param  string  $tableName
+     * @return bool
+     */
+    protected static function tableExistsMySQL(\PDO $pdo, string $tableName): bool
+    {
+        try {
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?");
+            $stmt->execute([$tableName]);
+            return (bool) $stmt->fetchColumn();
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Vérifier si une table existe (PostgreSQL).
+     *
+     * @param  \PDO  $pdo
+     * @param  string  $tableName
+     * @return bool
+     */
+    protected static function tableExistsPostgreSQL(\PDO $pdo, string $tableName): bool
+    {
+        try {
+            $stmt = $pdo->prepare("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_schema = 'public' AND table_name = ?)");
+            $stmt->execute([$tableName]);
+            return (bool) $stmt->fetchColumn();
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Vérifier si une table existe (SQLite).
+     *
+     * @param  \PDO  $pdo
+     * @param  string  $tableName
+     * @return bool
+     */
+    protected static function tableExistsSQLite(\PDO $pdo, string $tableName): bool
+    {
+        try {
+            $stmt = $pdo->prepare("SELECT name FROM sqlite_master WHERE type='table' AND name=?");
+            $stmt->execute([$tableName]);
+            return (bool) $stmt->fetchColumn();
+        } catch (\Throwable $e) {
             return false;
         }
     }
