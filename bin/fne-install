@@ -163,21 +163,9 @@ note('✅ Installation terminée avec succès !');
 echo PHP_EOL;
 
 echo "📚 Documentation : https://docs.neocode.com/fne-client" . PHP_EOL;
-echo PHP_EOL;
 echo "💡 Exemple d'utilisation :" . PHP_EOL;
-echo PHP_EOL;
-echo "   require_once 'vendor/autoload.php';" . PHP_EOL;
-echo "   require_once 'fne.php';" . PHP_EOL;
-echo PHP_EOL;
-echo "   use Neocode\\FNE\\FNEClient;" . PHP_EOL;
-echo "   use Neocode\\FNE\\Config\\FNEConfig;" . PHP_EOL;
-echo "   use Neocode\\FNE\\Http\\HttpClientFactory;" . PHP_EOL;
-echo PHP_EOL;
-echo "   \$config = new FNEConfig(require 'fne.php');" . PHP_EOL;
-echo "   \$httpClient = HttpClientFactory::create(\$config);" . PHP_EOL;
-echo "   \$fne = new FNEClient(\$httpClient, \$config);" . PHP_EOL;
-echo PHP_EOL;
-echo "   \$result = \$fne->invoice()->sign(\$data);" . PHP_EOL;
+echo "   use Neocode\\FNE\\Facades\\FNE;" . PHP_EOL;
+echo "   \$result = FNE::invoice()->sign(\$data);" . PHP_EOL;
 echo PHP_EOL;
 
 exit(0);

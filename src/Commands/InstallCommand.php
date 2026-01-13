@@ -110,7 +110,7 @@ class InstallCommand extends Command
         if ($publishMigrations) {
             $this->info('📝 Publication des migrations...');
             $this->call('vendor:publish', ['--tag' => 'fne-migrations']);
-            $this->info('✅ Migrations publiées. Exécutez "php artisan migrate" pour les appliquer.');
+            $this->info('Migrations publiées. Exécutez "php artisan migrate" pour les appliquer.');
         }
 
         $this->newLine();

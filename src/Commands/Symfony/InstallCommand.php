@@ -135,21 +135,9 @@ class InstallCommand extends Command
         note('✅ Installation terminée avec succès !');
         $output->writeln('');
         $output->writeln('📚 Documentation : https://docs.neocode.com/fne-client');
-        $output->writeln('');
         $output->writeln('💡 Exemple d\'utilisation :');
-        $output->writeln('');
-        $output->writeln('   use Neocode\\FNE\\FNEClient;');
-        $output->writeln('');
-        $output->writeln('   class InvoiceController {');
-        $output->writeln('       public function __construct(');
-        $output->writeln('           private FNEClient $fneClient');
-        $output->writeln('       ) {}');
-        $output->writeln('');
-        $output->writeln('       public function certify(): Response {');
-        $output->writeln('           $result = $this->fneClient->invoice()->sign($data);');
-        $output->writeln('           return new JsonResponse($result);');
-        $output->writeln('       }');
-        $output->writeln('   }');
+        $output->writeln('   use Neocode\\FNE\\Facades\\FNE;');
+        $output->writeln('   $result = FNE::invoice()->sign($data);');
         $output->writeln('');
 
         return Command::SUCCESS;
