@@ -3,6 +3,7 @@
 namespace Neocode\FNE\Mappers;
 
 use Neocode\FNE\Contracts\MapperInterface;
+use Neocode\FNE\Helpers\StringHelper;
 
 /**
  * Mapper de base pour la transformation ERP → FNE
@@ -44,6 +45,9 @@ abstract class BaseMapper implements MapperInterface
      */
     public function map(array $data): array
     {
+        // Convertir les clés snake_case en camelCase (pour compatibilité avec les modèles Laravel)
+        $data = $this->normalizeKeys($data);
+
         // Appliquer le mapping personnalisé si configuré
         if (!empty($this->customMapping)) {
             $data = $this->applyCustomMapping($data);
@@ -131,6 +135,71 @@ abstract class BaseMapper implements MapperInterface
         }
 
         $current = $value;
+    }
+
+    /**
+     * Normaliser les clés (convertir snake_case en camelCase).
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    protected function normalizeKeys(array $data): array
+    {
+        $normalized = [];
+
+        foreach ($data as $key => $value) {
+            // Convertir la clé en camelCase si elle est en snake_case
+            $camelKey = $this->convertKeyToCamelCase($key);
+
+            // Si la valeur est un tableau, normaliser récursivement
+            if (is_array($value) && !$this->isListArray($value)) {
+                $value = $this->normalizeKeys($value);
+            } elseif (is_array($value) && $this->isListArray($value)) {
+                // Pour les tableaux indexés numériquement (comme items), normaliser chaque élément
+                $value = array_map(function ($item) {
+                    if (is_array($item) && !$this->isListArray($item)) {
+                        return $this->normalizeKeys($item);
+                    }
+                    return $item;
+                }, $value);
+            }
+
+            $normalized[$camelKey] = $value;
+        }
+
+        return $normalized;
+    }
+
+    /**
+     * Convertir une clé en camelCase si elle est en snake_case.
+     *
+     * @param  string  $key
+     * @return string
+     */
+    protected function convertKeyToCamelCase(string $key): string
+    {
+        // Si la clé contient des underscores, la convertir en camelCase
+        if (str_contains($key, '_')) {
+            return StringHelper::camel($key);
+        }
+
+        // Sinon, retourner la clé telle quelle
+        return $key;
+    }
+
+    /**
+     * Vérifier si un tableau est une liste (indexée numériquement) ou un tableau associatif.
+     *
+     * @param  array  $array
+     * @return bool
+     */
+    protected function isListArray(array $array): bool
+    {
+        if (empty($array)) {
+            return false;
+        }
+
+        return array_keys($array) === range(0, count($array) - 1);
     }
 
     /**

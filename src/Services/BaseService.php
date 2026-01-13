@@ -160,11 +160,28 @@ abstract class BaseService
     protected function extractModelData(mixed $model): array
     {
         // Essayer toArray() si disponible (Laravel Eloquent)
+        // Cette méthode inclut automatiquement les relations chargées
         if (method_exists($model, 'toArray')) {
-            return $model->toArray();
+            $data = $model->toArray();
+            
+            // Convertir les relations Laravel (Collections) en arrays si nécessaire
+            foreach ($data as $key => $value) {
+                if (is_object($value)) {
+                    // Si c'est une Collection Laravel, convertir en array
+                    if (method_exists($value, 'toArray')) {
+                        $data[$key] = $value->toArray();
+                    } elseif (method_exists($value, 'all')) {
+                        // Pour les relations non chargées qui retournent une relation
+                        $data[$key] = $value->all();
+                    }
+                }
+            }
+            
+            return $data;
         }
 
         // Essayer attributesToArray() si disponible (Laravel Eloquent)
+        // Cette méthode n'inclut PAS les relations, seulement les attributs
         if (method_exists($model, 'attributesToArray')) {
             return $model->attributesToArray();
         }
