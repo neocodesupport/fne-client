@@ -29,7 +29,9 @@ abstract class BaseValidator implements ValidatorInterface
         $allRules = array_merge($baseRules, $rules);
 
         // Valider avec les règles
-        $errors = $this->validateRules($data, $allRules);
+        $validationResult = $this->validateRules($data, $allRules);
+        $errors = $validationResult['errors'] ?? [];
+        $failedRules = $validationResult['failed_rules'] ?? [];
 
         // Validation conditionnelle
         $conditionalErrors = $this->validateConditional($data);
@@ -37,11 +39,13 @@ abstract class BaseValidator implements ValidatorInterface
         // Fusionner les erreurs
         $allErrors = array_merge($errors, $conditionalErrors);
 
-        // Si des erreurs existent, lever une exception
+        // Si des erreurs existent, lever une exception avec contexte détaillé
         if (!empty($allErrors)) {
             throw new ValidationException(
                 'Validation failed',
-                $allErrors
+                $allErrors,
+                $data,
+                $failedRules
             );
         }
     }
@@ -66,11 +70,12 @@ abstract class BaseValidator implements ValidatorInterface
      *
      * @param  array<string, mixed>  $data
      * @param  array<string, mixed>  $rules
-     * @return array<string, array<int, string>>  Erreurs de validation
+     * @return array<string, mixed>  Résultat avec 'errors' et 'failed_rules'
      */
     protected function validateRules(array $data, array $rules): array
     {
         $errors = [];
+        $failedRules = [];
 
         foreach ($rules as $field => $fieldRules) {
             $value = $data[$field] ?? null;
@@ -80,26 +85,40 @@ abstract class BaseValidator implements ValidatorInterface
             if (str_contains($field, '.*.') && str_ends_with($field, '.*')) {
                 // Gérer les tableaux imbriqués (ex: items.*.taxes.*)
                 $fieldParts = explode('.*.', $field);
-                $errors = array_merge($errors, $this->validateNestedArrayField($data, $fieldParts, $fieldRules));
+                $nestedResult = $this->validateNestedArrayField($data, $fieldParts, $fieldRules);
+                $errors = array_merge($errors, $nestedResult['errors'] ?? []);
+                if (!empty($nestedResult['failed_rules'] ?? [])) {
+                    $failedRules[$field] = $nestedResult['failed_rules'];
+                }
                 continue;
             }
 
             // Si le champ est un tableau simple (ex: items.*.description)
             if (str_contains($field, '.*.')) {
                 [$parentField, $childField] = explode('.*.', $field, 2);
-                $errors = array_merge($errors, $this->validateArrayField($data, $parentField, $childField, $fieldRules));
+                $arrayResult = $this->validateArrayField($data, $parentField, $childField, $fieldRules);
+                $errors = array_merge($errors, $arrayResult['errors'] ?? []);
+                if (!empty($arrayResult['failed_rules'] ?? [])) {
+                    $failedRules[$field] = $arrayResult['failed_rules'];
+                }
                 continue;
             }
 
             // Valider le champ
-            $fieldErrors = $this->validateField($field, $value, $fieldRules);
+            $fieldResult = $this->validateField($field, $value, $fieldRules);
 
-            if (!empty($fieldErrors)) {
-                $errors[$field] = $fieldErrors;
+            if (!empty($fieldResult['errors'])) {
+                $errors[$field] = $fieldResult['errors'];
+                if (!empty($fieldResult['failed_rules'])) {
+                    $failedRules[$field] = $fieldResult['failed_rules'];
+                }
             }
         }
 
-        return $errors;
+        return [
+            'errors' => $errors,
+            'failed_rules' => $failedRules,
+        ];
     }
 
     /**
@@ -109,27 +128,34 @@ abstract class BaseValidator implements ValidatorInterface
      * @param  string  $parentField
      * @param  string  $childField
      * @param  array<int, string>  $rules
-     * @return array<string, array<int, string>>
+     * @return array<string, mixed>  Résultat avec 'errors' et 'failed_rules'
      */
     protected function validateArrayField(array $data, string $parentField, string $childField, array $rules): array
     {
         $errors = [];
+        $failedRules = [];
 
         if (!isset($data[$parentField]) || !is_array($data[$parentField])) {
-            return $errors;
+            return ['errors' => $errors, 'failed_rules' => $failedRules];
         }
 
         foreach ($data[$parentField] as $index => $item) {
             $value = $item[$childField] ?? null;
             $fieldKey = "{$parentField}.{$index}.{$childField}";
-            $fieldErrors = $this->validateField($fieldKey, $value, $rules);
+            $fieldResult = $this->validateField($fieldKey, $value, $rules);
 
-            if (!empty($fieldErrors)) {
-                $errors[$fieldKey] = $fieldErrors;
+            if (!empty($fieldResult['errors'])) {
+                $errors[$fieldKey] = $fieldResult['errors'];
+                if (!empty($fieldResult['failed_rules'])) {
+                    $failedRules[$fieldKey] = $fieldResult['failed_rules'];
+                }
             }
         }
 
-        return $errors;
+        return [
+            'errors' => $errors,
+            'failed_rules' => $failedRules,
+        ];
     }
 
     /**
@@ -138,11 +164,12 @@ abstract class BaseValidator implements ValidatorInterface
      * @param  array<string, mixed>  $data
      * @param  array<int, string>  $parts  Parties du chemin (ex: ['items', 'taxes', ''])
      * @param  array<int, string>  $rules
-     * @return array<string, array<int, string>>
+     * @return array<string, mixed>  Résultat avec 'errors' et 'failed_rules'
      */
     protected function validateNestedArrayField(array $data, array $parts, array $rules): array
     {
         $errors = [];
+        $failedRules = [];
 
         // Exemple: items.*.taxes.* -> ['items', 'taxes', '']
         // Le dernier élément peut être vide car c'est pour valider chaque élément du tableau taxes
@@ -150,11 +177,11 @@ abstract class BaseValidator implements ValidatorInterface
         $nestedField = $parts[1] ?? ''; // 'taxes'
 
         if (empty($parentField) || empty($nestedField)) {
-            return $errors;
+            return ['errors' => $errors, 'failed_rules' => $failedRules];
         }
 
         if (!isset($data[$parentField]) || !is_array($data[$parentField])) {
-            return $errors;
+            return ['errors' => $errors, 'failed_rules' => $failedRules];
         }
 
         foreach ($data[$parentField] as $index => $item) {
@@ -164,15 +191,21 @@ abstract class BaseValidator implements ValidatorInterface
 
             foreach ($item[$nestedField] as $taxIndex => $taxValue) {
                 $fieldKey = "{$parentField}.{$index}.{$nestedField}.{$taxIndex}";
-                $fieldErrors = $this->validateField($fieldKey, $taxValue, $rules);
+                $fieldResult = $this->validateField($fieldKey, $taxValue, $rules);
 
-                if (!empty($fieldErrors)) {
-                    $errors[$fieldKey] = $fieldErrors;
+                if (!empty($fieldResult['errors'])) {
+                    $errors[$fieldKey] = $fieldResult['errors'];
+                    if (!empty($fieldResult['failed_rules'])) {
+                        $failedRules[$fieldKey] = $fieldResult['failed_rules'];
+                    }
                 }
             }
         }
 
-        return $errors;
+        return [
+            'errors' => $errors,
+            'failed_rules' => $failedRules,
+        ];
     }
 
     /**
@@ -181,21 +214,26 @@ abstract class BaseValidator implements ValidatorInterface
      * @param  string  $field
      * @param  mixed  $value
      * @param  array<int, string>  $rules
-     * @return array<int, string>  Erreurs pour ce champ
+     * @return array<string, mixed>  Résultat avec 'errors' et 'failed_rules'
      */
     protected function validateField(string $field, mixed $value, array $rules): array
     {
         $errors = [];
+        $failedRules = [];
 
         foreach ($rules as $rule) {
             $error = $this->applyRule($field, $value, $rule);
 
             if ($error !== null) {
                 $errors[] = $error;
+                $failedRules[] = $rule;
             }
         }
 
-        return $errors;
+        return [
+            'errors' => $errors,
+            'failed_rules' => $failedRules,
+        ];
     }
 
     /**
