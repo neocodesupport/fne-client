@@ -73,7 +73,7 @@ class InstallCommand extends Command
         );
 
         $apiKey = text(
-            label: 'Clé API FNE',
+            label: 'Clé API FNE de ' . $mode,
             placeholder: 'Entrez votre clé API',
             required: true,
             validate: fn($value) => empty(trim($value)) ? 'La clé API est requise' : null
@@ -81,7 +81,7 @@ class InstallCommand extends Command
 
         $defaultUrl = ($mode === 'test') ? 'http://54.247.95.108/ws' : '';
         $baseUrl = text(
-            label: 'URL de l\'API FNE',
+            label: 'URL de l\'API FNE de ' . $mode,
             placeholder: $defaultUrl ?: 'https://api.fne.example.com/ws',
             default: $defaultUrl,
             required: true,
@@ -236,9 +236,9 @@ class InstallCommand extends Command
      */
     protected function installMigrations(OutputInterface $output): void
     {
-        $sqlFile = __DIR__ . '/../../../database/migrations/fne_certifications.sql';
+        $sqlFile = __DIR__ . '/../../../database/migrations/2024_01_01_000000_create_fne_certifications_table.sql';
         $targetDir = getcwd() . '/database/migrations';
-        $targetPath = $targetDir . '/fne_certifications.sql';
+        $targetPath = $targetDir . '/2024_01_01_000000_create_fne_certifications_table.sql';
 
         // Créer le dossier database/migrations s'il n'existe pas
         if (!is_dir($targetDir)) {

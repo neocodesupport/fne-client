@@ -119,9 +119,9 @@ if ($publishMigrations) {
     echo PHP_EOL;
     note('📝 Installation des migrations SQL...');
 
-    $sqlFile = __DIR__ . '/../database/migrations/fne_certifications.sql';
+    $sqlFile = __DIR__ . '/../database/migrations/2024_01_01_000000_create_fne_certifications_table.sql';
     $targetDir = getcwd() . '/database';
-    $targetPath = $targetDir . '/fne_certifications.sql';
+    $targetPath = $targetDir . '/2024_01_01_000000_create_fne_certifications_table.sql';
 
     // Créer le dossier database s'il n'existe pas
     if (!is_dir($targetDir)) {

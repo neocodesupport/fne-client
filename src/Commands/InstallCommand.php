@@ -61,14 +61,14 @@ class InstallCommand extends Command
 
         $mode = $modeChoice;
 
-        $apiKey = $this->ask('Clé API FNE', env('FNE_API_KEY', ''));
+        $apiKey = $this->ask('Clé API FNE de ' . $mode, env('FNE_API_KEY', ''));
         if (empty($apiKey)) {
             $this->error('La clé API est requise.');
             return Command::FAILURE;
         }
 
         $defaultUrl = ($mode === 'test') ? 'http://54.247.95.108/ws' : '';
-        $baseUrl = $this->ask('URL de l\'API FNE', $defaultUrl);
+        $baseUrl = $this->ask('URL de l\'API FNE de ' . $mode, $defaultUrl);
         if (empty($baseUrl)) {
             $this->error('L\'URL de l\'API est requise.');
             return Command::FAILURE;
