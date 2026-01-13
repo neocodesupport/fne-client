@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Améliorations futures et corrections de bugs
 
+## [1.0.0] - 2025-01-XX
+
+### Changed
+- **Version stable** : Passage en version stable 1.0.0
+- Toutes les fonctionnalités de la version beta sont maintenant stables et prêtes pour la production
+
 ## [1.0.0-beta] - 2025-01-XX
 
 ### Added
