@@ -3,7 +3,6 @@
 namespace Neocode\FNE\Commands\Symfony;
 
 use function Laravel\Prompts\text;
-use function Laravel\Prompts\select;
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\note;
 use function Laravel\Prompts\error;
@@ -70,34 +69,15 @@ class InstallCommand extends Command
             validate: fn($value) => empty(trim($value)) ? 'La clé API est requise' : null
         );
 
-        $baseUrlChoice = select(
+        $baseUrl = text(
             label: 'URL de l\'API FNE',
-            options: [
-                'test' => 'Test : http://54.247.95.108/ws',
-                'production' => 'Production : (à configurer après validation DGI)',
-                'custom' => 'URL personnalisée',
-            ],
-            default: 'test'
+            placeholder: 'http://54.247.95.108/ws',
+            default: 'http://54.247.95.108/ws',
+            required: true,
+            validate: fn($value) => empty(trim($value)) ? 'L\'URL est requise' : null
         );
 
-        $customUrl = null;
-        if ($baseUrlChoice === 'custom') {
-            $customUrl = text(
-                label: 'URL personnalisée',
-                placeholder: 'https://api.fne.example.com/ws',
-                required: true,
-                validate: fn($value) => empty(trim($value)) ? 'L\'URL est requise' : null
-            );
-        }
-
-        $baseUrl = match ($baseUrlChoice) {
-            'test' => 'http://54.247.95.108/ws',
-            'production' => '',
-            'custom' => $customUrl,
-            default => 'http://54.247.95.108/ws',
-        };
-
-        $mode = $baseUrlChoice === 'production' ? 'production' : 'test';
+        $mode = ($baseUrl === 'http://54.247.95.108/ws') ? 'test' : 'production';
 
         // 2. Configuration du cache
         $output->writeln('');

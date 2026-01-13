@@ -56,24 +56,13 @@ class InstallCommand extends Command
             return Command::FAILURE;
         }
 
-        $baseUrlChoice = $this->choice(
-            'URL de l\'API FNE',
-            [
-                'test' => 'Test : https://fne-api-mock.test',
-                'production' => 'Production : (à configurer après validation DGI)',
-                'custom' => 'URL personnalisée',
-            ],
-            'test'
-        );
+        $baseUrl = $this->ask('URL de l\'API FNE', 'http://54.247.95.108/ws');
+        if (empty($baseUrl)) {
+            $this->error('L\'URL de l\'API est requise.');
+            return Command::FAILURE;
+        }
 
-        $baseUrl = match ($baseUrlChoice) {
-            'test' => 'https://fne-api-mock.test',
-            'production' => '',
-            'custom' => $this->ask('URL personnalisée', ''),
-            default => 'https://fne-api-mock.test',
-        };
-
-        $mode = $baseUrlChoice === 'production' ? 'production' : 'test';
+        $mode = ($baseUrl === 'http://54.247.95.108/ws') ? 'test' : 'production';
 
         // 2. Configuration du cache
         $useCache = $this->confirm('Activer le cache ?', true);
