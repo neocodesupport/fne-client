@@ -905,9 +905,10 @@ Les contributions sont les bienvenues ! Veuillez lire le guide de contribution a
 
 ## 📞 Support
 
-- **Documentation** : [https://docs.neocode.com/fne-client](https://docs.neocode.com/fne-client)
-- **Issues** : [https://github.com/neocode/fne-client/issues](https://github.com/neocode/fne-client/issues)
-- **Email** : support@neocode.com
+- **Documentation** : [https://fne-client.neocode.ci/](https://fne-client.neocode.ci/)
+- **Repository GitHub** : [https://github.com/neocodesupport/fne-client](https://github.com/neocodesupport/fne-client)
+- **Issues** : [https://github.com/neocodesupport/fne-client/issues](https://github.com/neocodesupport/fne-client/issues)
+- **Email** : support@neocode.ci
 
 ## 🙏 Remerciements
 
