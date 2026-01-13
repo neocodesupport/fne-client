@@ -87,16 +87,25 @@ trait CertifiableInvoice
             return;
         }
 
-        // Vérifier si la table existe
-        if (function_exists('app') && app()->bound('db')) {
-            try {
-                $exists = \Illuminate\Support\Facades\Schema::hasTable('fne_certifications');
-                if (!$exists) {
-                    return;
+        // Vérifier si on est dans Laravel et si la table existe
+        if (!function_exists('app') || !app()->bound('db')) {
+            return;
+        }
+
+        try {
+            // Vérifier si la table existe
+            if (!\Illuminate\Support\Facades\Schema::hasTable('fne_certifications')) {
+                // Logger un message informatif mais ne pas faire échouer
+                if (app()->bound(\Psr\Log\LoggerInterface::class)) {
+                    app(\Psr\Log\LoggerInterface::class)->info('FNE certifications table does not exist. Run migration: php artisan migrate', [
+                        'reference' => $response->reference ?? null,
+                    ]);
                 }
-            } catch (\Throwable $e) {
-                // Si on ne peut pas vérifier, on essaie quand même
+                return;
             }
+        } catch (\Throwable $e) {
+            // Si on ne peut pas vérifier l'existence de la table, on abandonne silencieusement
+            return;
         }
 
         try {
@@ -132,9 +141,21 @@ trait CertifiableInvoice
                 'balance_sticker' => $response->balanceSticker,
                 'fne_date' => $invoice->date ?? now(),
             ]);
-        } catch (\Throwable $e) {
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Erreur SQL (table n'existe pas, colonne manquante, etc.)
             // Logger l'erreur mais ne pas faire échouer la certification
-            if (function_exists('app') && app()->bound(\Psr\Log\LoggerInterface::class)) {
+            if (app()->bound(\Psr\Log\LoggerInterface::class)) {
+                app(\Psr\Log\LoggerInterface::class)->warning('Failed to save FNE certification to table (database error)', [
+                    'error' => $e->getMessage(),
+                    'sql_state' => $e->getCode(),
+                    'reference' => $response->reference ?? null,
+                    'hint' => 'Make sure the fne_certifications table exists. Run: php artisan migrate',
+                ]);
+            }
+        } catch (\Throwable $e) {
+            // Autres erreurs (validation, etc.)
+            // Logger l'erreur mais ne pas faire échouer la certification
+            if (app()->bound(\Psr\Log\LoggerInterface::class)) {
                 app(\Psr\Log\LoggerInterface::class)->warning('Failed to save FNE certification to table', [
                     'error' => $e->getMessage(),
                     'reference' => $response->reference ?? null,
